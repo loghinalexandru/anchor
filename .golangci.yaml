@@ -1,0 +1,13 @@
+linters:
+  enable:
+    - bodyclose
+    - errname
+    - exhaustive
+    - gosec
+    - dupl
+    - goconst
+    - gocritic
+    - loggercheck
+    - misspell
+severity:
+  default-severity: error

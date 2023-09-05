@@ -24,9 +24,7 @@ func main() {
 	subcommand.RegisterInit(rootCmd, rootFlags)
 	subcommand.RegisterCreate(rootCmd, rootFlags)
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer cancel()
-
+	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	err := rootCmd.ParseAndRun(ctx, os.Args[1:])
 
 	if errors.Is(err, ff.ErrHelp) || errors.Is(err, ff.ErrNoExec) {
