@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 
 	"github.com/peterbourgon/ff/v4"
@@ -45,15 +46,17 @@ func RegisterInit(root *ff.Command, rootFlags *ff.CoreFlags) {
 func (c *initCmd) handle(res chan<- error) {
 	defer close(res)
 
+	dir, _ := c.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
-
 	if err != nil {
 		res <- fmt.Errorf("%w with base: '%w'", ErrHomeDir, err)
 		return
 	}
 
-	if _, err := os.Stat(home + "/.anchor"); os.IsNotExist(err) {
-		err = os.Mkdir(home+"/.anchor", 0777)
+	path := fmt.Sprintf("%s/%s", home, dir.GetValue())
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err = os.Mkdir(path, fs.ModePerm)
 
 		if err != nil {
 			res <- fmt.Errorf("%w with base: '%w'", ErrCreateDir, err)

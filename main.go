@@ -15,6 +15,8 @@ import (
 func main() {
 	rootFlags := ff.NewFlags("anchor")
 	_ = rootFlags.Bool('v', "verbose", false, "increase log verbosity")
+	_ = rootFlags.String('d', "root-dir", ".anchor", "change default directory name")
+
 	rootCmd := &ff.Command{
 		Name:  "anchor",
 		Usage: "anchor [FLAGS] <SUBCOMMAND>",
@@ -23,6 +25,7 @@ func main() {
 
 	subcommand.RegisterInit(rootCmd, rootFlags)
 	subcommand.RegisterCreate(rootCmd, rootFlags)
+	subcommand.RegisterGet(rootCmd, rootFlags)
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	err := rootCmd.ParseAndRun(ctx, os.Args[1:])
