@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -64,7 +65,7 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 	}
 
 	hierarchy := strings.Split(labelFlag.GetValue(), ",")
-	path := fmt.Sprintf("%s/%s/%s", home, dir.GetValue(), strings.Join(hierarchy, "."))
+	path := filepath.Join(home, dir.GetValue(), strings.Join(hierarchy, "."))
 
 	fh, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
 	if err != nil {
@@ -73,28 +74,43 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 	}
 
 	defer fh.Close()
-	url, err := url.ParseRequestURI(args[0])
+
+	if len(args) == 0 {
+		res <- ErrInvalidURL
+		return
+	}
+
+	bookmark := args[0]
+	_, err = url.ParseRequestURI(bookmark)
 	if err != nil {
 		res <- ErrInvalidURL
 		return
 	}
 
-	// Rethinkg this duplicate, maybe do update on conflict
 	content, _ := io.ReadAll(fh)
-	if match, _ := regexp.Match(url.String(), content); match {
+
+	if match, _ := regexp.Match(regexp.QuoteMeta(bookmark), content); match {
 		res <- ErrDuplicate
 		return
 	}
 
-	if titleFlag.GetValue() == "" {
+	if titleFlag.GetValue() == titleFlag.GetDefault() {
 		title, err := title(ctx, args[0])
 		if err != nil {
 			res <- err
 			return
 		}
 
-		// Check error
-		_ = titleFlag.SetValue(title)
+		err = titleFlag.SetValue(title)
+		if err != nil {
+			res <- err
+			return
+		}
+	}
+
+	if titleFlag.GetValue() == titleFlag.GetDefault() {
+		res <- ErrInvalidTitle
+		return
 	}
 
 	_, err = fmt.Fprintf(fh, "%q %q\n", titleFlag.GetValue(), args[0])

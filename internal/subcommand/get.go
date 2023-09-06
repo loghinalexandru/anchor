@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -51,32 +52,49 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	hierarchy := strings.Split(labelFlag.GetValue(), ",")
-	path := fmt.Sprintf("%s/%s/%s", home, dir.GetValue(), strings.Join(hierarchy, "."))
+	paths := multiLevelPaths(filepath.Join(home, dir.GetValue()), labelFlag)
 
-	fh, err := os.Open(path)
-	if err != nil {
-		res <- err
-		return
+	for _, p := range paths {
+		fh, err := os.Open(p)
+		if err != nil {
+			res <- err
+			return
+		}
+
+		content, err := io.ReadAll(fh)
+		if err != nil {
+			res <- err
+			return
+		}
+
+		fh.Close()
+
+		if len(args) == 0 {
+			fmt.Fprintf(os.Stdout, "%s\n", string(content))
+			continue
+		}
+
+		regex := regexp.MustCompile(fmt.Sprintf("(?im)^\".*%s.*\"$", regexp.QuoteMeta(args[0])))
+		mm := regex.FindAll(content, -1)
+
+		for _, m := range mm {
+			fmt.Fprintf(os.Stdout, "%s\n", m)
+		}
+	}
+}
+
+func multiLevelPaths(rootDir string, labels ff.Flag) []string {
+	var paths []string
+
+	if labels.GetValue() == labels.GetDefault() {
+		return []string{filepath.Join(rootDir, labels.GetDefault())}
 	}
 
-	defer fh.Close()
+	ll := strings.Split(labels.GetValue(), ",")
 
-	content, err := io.ReadAll(fh)
-	if err != nil {
-		res <- err
-		return
+	for i := 1; i <= len(ll); i++ {
+		paths = append(paths, filepath.Join(rootDir, strings.Join(ll[:i], ".")))
 	}
 
-	if len(args) == 0 {
-		fmt.Fprintf(os.Stdout, "%s\n", string(content))
-		return
-	}
-
-	regex := regexp.MustCompile(fmt.Sprintf("(?im)^\".*%s.*\"$", regexp.QuoteMeta(args[0])))
-	mm := regex.FindAll(content, -1)
-
-	for _, m := range mm {
-		fmt.Fprintf(os.Stdout, "%s\n", m)
-	}
+	return paths
 }

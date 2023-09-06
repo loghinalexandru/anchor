@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 
 	"github.com/peterbourgon/ff/v4"
 )
@@ -53,7 +54,7 @@ func (c *initCmd) handle(res chan<- error) {
 		return
 	}
 
-	path := fmt.Sprintf("%s/%s", home, dir.GetValue())
+	path := filepath.Join(home, dir.GetValue())
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.Mkdir(path, fs.ModePerm)
