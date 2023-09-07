@@ -52,8 +52,6 @@ func RegisterCreate(root *ff.Command, rootFlags *ff.CoreFlags) {
 }
 
 func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- error) {
-	defer close(res)
-
 	labelFlag, _ := cmd.Flags.GetFlag("label")
 	titleFlag, _ := cmd.Flags.GetFlag("title")
 	dir, _ := cmd.Flags.GetFlag("root-dir")
@@ -73,8 +71,6 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 		return
 	}
 
-	defer fh.Close()
-
 	if len(args) == 0 {
 		res <- ErrInvalidURL
 		return
@@ -88,6 +84,7 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 	}
 
 	content, _ := io.ReadAll(fh)
+	defer fh.Close()
 
 	if match, _ := regexp.Match(regexp.QuoteMeta(bookmark), content); match {
 		res <- ErrDuplicate
@@ -118,6 +115,8 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 	if err != nil {
 		res <- err
 	}
+
+	close(res)
 }
 
 func title(ctx context.Context, url string) (string, error) {

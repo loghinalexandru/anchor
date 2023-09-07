@@ -45,8 +45,6 @@ func RegisterInit(root *ff.Command, rootFlags *ff.CoreFlags) {
 }
 
 func (c *initCmd) handle(res chan<- error) {
-	defer close(res)
-
 	dir, _ := c.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -64,4 +62,6 @@ func (c *initCmd) handle(res chan<- error) {
 			return
 		}
 	}
+
+	close(res)
 }

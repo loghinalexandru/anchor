@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
+	"github.com/loghinalexandru/anchor/internal/regex"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -41,8 +41,6 @@ func RegisterGet(root *ff.Command, rootFlags *ff.CoreFlags) {
 }
 
 func (c *getCmd) handle(args []string, res chan<- error) {
-	defer close(res)
-
 	labelFlag, _ := c.Flags.GetFlag("label")
 	dir, _ := c.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
@@ -74,13 +72,12 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 			continue
 		}
 
-		regex := regexp.MustCompile(fmt.Sprintf("(?im)^\".*%s.*\"$", regexp.QuoteMeta(args[0])))
-		mm := regex.FindAll(content, -1)
-
-		for _, m := range mm {
+		for _, m := range regex.MatchLines(content, args[0]) {
 			fmt.Fprintf(os.Stdout, "%s\n", m)
 		}
 	}
+
+	close(res)
 }
 
 func multiLevelPaths(rootDir string, labels ff.Flag) []string {
