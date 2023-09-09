@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/loghinalexandru/anchor/internal/regex"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -120,7 +121,6 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 }
 
 func title(ctx context.Context, url string) (string, error) {
-	titleMatch := regexp.MustCompile("<title>(?P<title>.*)</title>")
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return "", err
@@ -131,16 +131,12 @@ func title(ctx context.Context, url string) (string, error) {
 		return "", err
 	}
 
-	defer res.Body.Close()
 	page, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
-	m := titleMatch.FindSubmatch(page)
-	if len(m) == 0 {
-		return "", nil
-	}
+	res.Body.Close()
 
-	return string(m[1]), nil
+	return regex.MatchTitle(page), nil
 }

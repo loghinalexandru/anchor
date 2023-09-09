@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -30,7 +32,7 @@ func RegisterInit(root *ff.Command, rootFlags *ff.CoreFlags) {
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
 			res := make(chan error, 1)
-			go cmd.handle(res)
+			go cmd.handle(args, res)
 
 			select {
 			case <-ctx.Done():
@@ -44,15 +46,34 @@ func RegisterInit(root *ff.Command, rootFlags *ff.CoreFlags) {
 	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
 }
 
-func (c *initCmd) handle(res chan<- error) {
+func (c *initCmd) handle(args []string, res chan<- error) {
+	repo, _ := c.Flags.GetFlag("repository")
 	dir, _ := c.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
+
 	if err != nil {
 		res <- fmt.Errorf("%w with base: '%w'", ErrHomeDir, err)
 		return
 	}
 
 	path := filepath.Join(home, dir.GetValue())
+
+	if repo.GetValue() == "true" {
+		repo, err := git.PlainInit(path, false)
+		if err != nil {
+			res <- err
+			return
+		}
+
+		_, err = repo.CreateRemote(&config.RemoteConfig{
+			Name:  "origin",
+			URLs:  []string{args[0]},
+			Fetch: []config.RefSpec{config.RefSpec("+refs/heads/*:refs/remotes/origin/*")},
+		})
+
+		res <- err
+		return
+	}
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.Mkdir(path, fs.ModePerm)
