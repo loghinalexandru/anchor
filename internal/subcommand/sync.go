@@ -5,8 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/loghinalexandru/anchor/internal/vcs"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -47,55 +46,11 @@ func (c *syncCmd) handle(res chan<- error) {
 	}
 
 	path := filepath.Join(home, dir.GetValue())
-	repo, err := git.PlainOpen(path)
+	err = vcs.PushWithSSH(path)
 
 	if err != nil {
 		res <- err
 		return
-	}
-
-	tree, _ := repo.Worktree()
-	status, err := tree.Status()
-	if err != nil {
-		res <- err
-		return
-	}
-
-	if status.IsClean() {
-		close(res)
-		return
-	}
-
-	auth, err := ssh.NewSSHAgentAuth("git")
-	if err != nil {
-		res <- err
-		return
-	}
-
-	_ = tree.Pull(&git.PullOptions{
-		RemoteName: "origin",
-		Auth:       auth,
-	})
-
-	_, err = tree.Add(".")
-	if err != nil {
-		res <- err
-		return
-	}
-
-	_, err = tree.Commit("Sync bookmarks", &git.CommitOptions{})
-	if err != nil {
-		res <- err
-		return
-	}
-
-	err = repo.Push(&git.PushOptions{
-		RemoteName: "origin",
-		Auth:       auth,
-	})
-
-	if err != nil {
-		res <- err
 	}
 
 	close(res)

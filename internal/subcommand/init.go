@@ -8,8 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
+	"github.com/loghinalexandru/anchor/internal/vcs"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -59,18 +58,13 @@ func (c *initCmd) handle(args []string, res chan<- error) {
 	path := filepath.Join(home, dir.GetValue())
 
 	if repo.GetValue() == "true" {
-		repo, err := git.PlainInit(path, false)
+		err := vcs.PlainInitWithRemote(path, args[0])
 		if err != nil {
 			res <- err
 			return
 		}
 
-		_, err = repo.CreateRemote(&config.RemoteConfig{
-			Name:  "origin",
-			URLs:  []string{args[0]},
-			Fetch: []config.RefSpec{config.RefSpec("+refs/heads/*:refs/remotes/origin/*")},
-		})
-
+		err = vcs.PullWithSSH(path)
 		res <- err
 		return
 	}
