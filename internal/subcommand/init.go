@@ -58,14 +58,11 @@ func (c *initCmd) handle(args []string, res chan<- error) {
 	path := filepath.Join(home, dir.GetValue())
 
 	if repo.GetValue() == "true" {
-		err := vcs.PlainInitWithRemote(path, args[0])
+		err := vcs.CloneWithSSH(path, args[0])
 		if err != nil {
 			res <- err
-			return
 		}
-
-		err = vcs.PullWithSSH(path)
-		res <- err
+		close(res)
 		return
 	}
 
