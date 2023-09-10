@@ -57,7 +57,11 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	paths := multiLevelPaths(filepath.Join(home, dir.GetValue()), labelFlag)
+	paths, err := multiLevelPaths(filepath.Join(home, dir.GetValue()), labelFlag)
+	if err != nil {
+		res <- err
+		return
+	}
 
 	for _, p := range paths {
 		fh, err := os.Open(p)
@@ -101,20 +105,32 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 	}
 }
 
-func multiLevelPaths(rootDir string, labels ff.Flag) []string {
+func multiLevelPaths(rootDir string, labels ff.Flag) ([]string, error) {
 	var paths []string
 
 	if labels.GetValue() == labels.GetDefault() {
-		return []string{filepath.Join(rootDir, labels.GetDefault())}
+		return []string{filepath.Join(rootDir, labels.GetDefault())}, nil
 	}
 
-	ll := strings.Split(labels.GetValue(), ",")
+	// Think if this is a good idea (decide on separator)
+	prefix := strings.ReplaceAll(labels.GetValue(), ",", ".")
 
-	for i := 1; i <= len(ll); i++ {
-		paths = append(paths, filepath.Join(rootDir, strings.Join(ll[:i], ".")))
+	dd, err := os.ReadDir(rootDir)
+	if err != nil {
+		return nil, err
 	}
 
-	return paths
+	for _, d := range dd {
+		if d.IsDir() {
+			continue
+		}
+
+		if strings.HasPrefix(d.Name(), prefix) {
+			paths = append(paths, filepath.Join(rootDir, d.Name()))
+		}
+	}
+
+	return paths, nil
 }
 
 func open(url string) error {
