@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/regex"
 	"github.com/peterbourgon/ff/v4"
@@ -23,7 +22,7 @@ type deleteCmd ff.Command
 func RegisterDelete(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *deleteCmd
 	flags := ff.NewFlags("delete").SetParent(rootFlags)
-	_ = flags.String('l', "label", DefaultLabel, "add label in order of appearance")
+	_ = flags.StringSet('l', "label", "add label in order of appearance")
 
 	cmd = &deleteCmd{
 		Name:      "delete",
@@ -57,9 +56,13 @@ func (c *deleteCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	hierarchy := strings.Split(labelFlag.GetValue(), ",")
-	path := filepath.Join(home, dir.GetValue(), strings.Join(hierarchy, "."))
+	tree, err := flatten(labelFlag.GetValue())
+	if err != nil {
+		res <- err
+		return
+	}
 
+	path := filepath.Join(home, dir.GetValue(), tree)
 	fh, err := os.OpenFile(path, os.O_RDWR, fs.ModePerm)
 	if err != nil {
 		res <- err

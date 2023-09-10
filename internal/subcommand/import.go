@@ -86,6 +86,7 @@ func (c *importCmd) handle(args []string, res chan<- error) {
 func traversal(basePath string, fileName string, node netscape.Folder) error {
 	isRoot, _ := regexp.MatchString("(?i)bookmark|bar", node.Name)
 
+	// Use flatten()
 	if len(node.Bookmarks) > 0 && !isRoot {
 		label := strings.ReplaceAll(node.Name, " ", "")
 		label = strings.ToLower(label)

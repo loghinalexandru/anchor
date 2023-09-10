@@ -5,14 +5,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
-)
-
-const (
-	DefaultLabel = "root"
 )
 
 var (
@@ -25,7 +20,7 @@ type createCmd ff.Command
 func RegisterCreate(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *createCmd
 	flags := ff.NewFlags("create").SetParent(rootFlags)
-	_ = flags.String('l', "label", DefaultLabel, "add label in order of appearance split by ','")
+	_ = flags.StringSet('l', "label", "add labels in order of appearance")
 	_ = flags.String('t', "title", "", "add custom title")
 
 	cmd = &createCmd{
@@ -77,8 +72,14 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 		}
 	}
 
-	hierarchy := strings.Split(labelFlag.GetValue(), ",")
-	path := filepath.Join(home, dir.GetValue(), strings.Join(hierarchy, "."))
+	tree, err := flatten(labelFlag.GetValue())
+
+	if err != nil {
+		res <- err
+		return
+	}
+
+	path := filepath.Join(home, dir.GetValue(), tree)
 	_, err = bookmark.Append(*b, path)
 
 	if err != nil {

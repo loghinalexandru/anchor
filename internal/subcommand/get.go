@@ -20,7 +20,7 @@ type getCmd ff.Command
 func RegisterGet(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *getCmd
 	flags := ff.NewFlags("get").SetParent(rootFlags)
-	_ = flags.String('l', "label", DefaultLabel, "specify label hierarchy for each")
+	_ = flags.StringSet('l', "label", "specify label hierarchy for each")
 	_ = flags.Bool('o', "open", false, "open specified link")
 
 	cmd = &getCmd{
@@ -57,7 +57,13 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	paths, err := multiLevelPaths(filepath.Join(home, dir.GetValue()), labelFlag)
+	tree, err := flatten(labelFlag.GetValue())
+	if err != nil {
+		res <- err
+		return
+	}
+
+	paths, err := multiLevelPaths(filepath.Join(home, dir.GetValue()), tree)
 	if err != nil {
 		res <- err
 		return
@@ -105,15 +111,8 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 	}
 }
 
-func multiLevelPaths(rootDir string, labels ff.Flag) ([]string, error) {
+func multiLevelPaths(rootDir string, treePath string) ([]string, error) {
 	var paths []string
-
-	if labels.GetValue() == labels.GetDefault() {
-		return []string{filepath.Join(rootDir, labels.GetDefault())}, nil
-	}
-
-	// Think if this is a good idea (decide on separator)
-	prefix := strings.ReplaceAll(labels.GetValue(), ",", ".")
 
 	dd, err := os.ReadDir(rootDir)
 	if err != nil {
@@ -125,7 +124,7 @@ func multiLevelPaths(rootDir string, labels ff.Flag) ([]string, error) {
 			continue
 		}
 
-		if strings.HasPrefix(d.Name(), prefix) {
+		if strings.HasPrefix(d.Name(), treePath) {
 			paths = append(paths, filepath.Join(rootDir, d.Name()))
 		}
 	}
