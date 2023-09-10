@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/regex"
@@ -28,7 +27,7 @@ type createCmd ff.Command
 func RegisterCreate(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *createCmd
 	flags := ff.NewFlags("create").SetParent(rootFlags)
-	_ = flags.String('l', "label", "root", "add label in order of appearance")
+	_ = flags.String('l', "label", "root", "add label in order of appearance split by ','")
 	_ = flags.String('t', "title", "", "add custom title")
 
 	cmd = &createCmd{
@@ -87,7 +86,7 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 	content, _ := io.ReadAll(fh)
 	defer fh.Close()
 
-	if match, _ := regexp.Match(regexp.QuoteMeta(bookmark), content); match {
+	if ok := regex.MatchLines(content, bookmark); ok {
 		res <- ErrDuplicate
 		return
 	}
@@ -111,8 +110,7 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 		return
 	}
 
-	_, err = fmt.Fprintf(fh, "%q %q\n", titleFlag.GetValue(), args[0])
-
+	_, err = fmt.Fprintf(fh, "%q %q\n", titleFlag.GetValue(), strings.Trim(args[0], " \r\n"))
 	if err != nil {
 		res <- err
 	}
@@ -138,5 +136,5 @@ func title(ctx context.Context, url string) (string, error) {
 
 	res.Body.Close()
 
-	return regex.MatchTitle(page), nil
+	return regex.FindTitle(page), nil
 }

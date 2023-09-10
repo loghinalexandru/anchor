@@ -68,12 +68,12 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 		fh.Close()
 
 		if len(args) == 0 {
-			fmt.Fprintf(os.Stdout, "%s\n", string(content))
+			fmt.Fprintf(os.Stdout, "%s", string(content))
 			continue
 		}
 
-		for _, m := range regex.MatchLines(content, args[0]) {
-			fmt.Fprintf(os.Stdout, "%s\n", m)
+		for _, m := range regex.FindLines(content, args[0]) {
+			fmt.Fprintf(os.Stdout, "%s\n", string(m))
 		}
 	}
 
