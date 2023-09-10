@@ -11,6 +11,10 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
+const (
+	DefaultLabel = "root"
+)
+
 var (
 	ErrInvalidURL   = errors.New("not a valid url")
 	ErrDuplicate    = errors.New("duplicate")
@@ -22,7 +26,7 @@ type createCmd ff.Command
 func RegisterCreate(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *createCmd
 	flags := ff.NewFlags("create").SetParent(rootFlags)
-	_ = flags.String('l', "label", "root", "add label in order of appearance split by ','")
+	_ = flags.String('l', "label", DefaultLabel, "add label in order of appearance split by ','")
 	_ = flags.String('t', "title", "", "add custom title")
 
 	cmd = &createCmd{

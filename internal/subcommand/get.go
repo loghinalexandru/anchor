@@ -17,7 +17,7 @@ type getCmd ff.Command
 func RegisterGet(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *getCmd
 	flags := ff.NewFlags("get").SetParent(rootFlags)
-	_ = flags.String('l', "label", "root", "specify label hierarchy for each")
+	_ = flags.String('l', "label", DefaultLabel, "specify label hierarchy for each")
 
 	cmd = &getCmd{
 		Name:      "get",

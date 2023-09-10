@@ -23,7 +23,7 @@ type deleteCmd ff.Command
 func RegisterDelete(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *deleteCmd
 	flags := ff.NewFlags("delete").SetParent(rootFlags)
-	_ = flags.String('l', "label", "root", "add label in order of appearance")
+	_ = flags.String('l', "label", DefaultLabel, "add label in order of appearance")
 
 	cmd = &deleteCmd{
 		Name:      "delete",

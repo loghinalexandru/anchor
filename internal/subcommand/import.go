@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
 	"github.com/virtualtam/netscape-go/v2"
 )
@@ -45,6 +49,13 @@ func RegisterImport(root *ff.Command, rootFlags *ff.CoreFlags) {
 func (c *importCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
+	dir, _ := c.Flags.GetFlag("root-dir")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		res <- err
+		return
+	}
+
 	if len(args) == 0 {
 		res <- ErrInvalidImportFile
 		return
@@ -62,6 +73,55 @@ func (c *importCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
+	path := filepath.Join(home, dir.GetValue())
 	doc, _ := netscape.Unmarshal(content)
-	fmt.Print(doc)
+	err = traversal(path, "", doc.Root)
+
+	if err != nil {
+		res <- err
+	}
+}
+
+// Refactor this
+func traversal(basePath string, fileName string, node netscape.Folder) error {
+	isRoot, _ := regexp.MatchString("(?i)bookmark|bar", node.Name)
+
+	if len(node.Bookmarks) > 0 && !isRoot {
+		label := strings.ReplaceAll(node.Name, " ", "")
+		label = strings.ToLower(label)
+
+		if fileName != "" {
+			fileName = fmt.Sprintf("%s.%s", fileName, label)
+		} else {
+			fileName = label
+		}
+	}
+
+	for _, b := range node.Bookmarks {
+		var filePath string
+		entry, err := bookmark.New(b.Title, b.URL)
+		if err != nil {
+			return err
+		}
+
+		if fileName == "" {
+			filePath = filepath.Join(basePath, "root")
+		} else {
+			filePath = filepath.Join(basePath, fileName)
+		}
+
+		_, err = bookmark.Append(*entry, filePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, n := range node.Subfolders {
+		err := traversal(basePath, fileName, n)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
