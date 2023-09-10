@@ -41,6 +41,8 @@ func RegisterGet(root *ff.Command, rootFlags *ff.CoreFlags) {
 }
 
 func (c *getCmd) handle(args []string, res chan<- error) {
+	defer close(res)
+
 	labelFlag, _ := c.Flags.GetFlag("label")
 	dir, _ := c.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
@@ -76,8 +78,6 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 			fmt.Fprintf(os.Stdout, "%s\n", string(m))
 		}
 	}
-
-	close(res)
 }
 
 func multiLevelPaths(rootDir string, labels ff.Flag) []string {

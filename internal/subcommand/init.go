@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/loghinalexandru/anchor/internal/vcs"
+	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -46,6 +46,8 @@ func RegisterInit(root *ff.Command, rootFlags *ff.CoreFlags) {
 }
 
 func (c *initCmd) handle(args []string, res chan<- error) {
+	defer close(res)
+
 	repo, _ := c.Flags.GetFlag("repository")
 	dir, _ := c.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
@@ -58,11 +60,10 @@ func (c *initCmd) handle(args []string, res chan<- error) {
 	path := filepath.Join(home, dir.GetValue())
 
 	if repo.GetValue() == "true" {
-		err := vcs.CloneWithSSH(path, args[0])
+		err := storage.CloneWithSSH(path, args[0])
 		if err != nil {
 			res <- err
 		}
-		close(res)
 		return
 	}
 
@@ -74,6 +75,4 @@ func (c *initCmd) handle(args []string, res chan<- error) {
 			return
 		}
 	}
-
-	close(res)
 }

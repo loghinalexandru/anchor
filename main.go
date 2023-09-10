@@ -28,6 +28,7 @@ func main() {
 	subcommand.RegisterGet(rootCmd, rootFlags)
 	subcommand.RegisterDelete(rootCmd, rootFlags)
 	subcommand.RegisterSync(rootCmd, rootFlags)
+	subcommand.RegisterImport(rootCmd, rootFlags)
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	err := rootCmd.ParseAndRun(ctx, os.Args[1:])

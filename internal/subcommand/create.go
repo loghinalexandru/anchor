@@ -3,16 +3,11 @@ package subcommand
 import (
 	"context"
 	"errors"
-	"fmt"
-	"io"
-	"io/fs"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/loghinalexandru/anchor/internal/regex"
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -52,6 +47,8 @@ func RegisterCreate(root *ff.Command, rootFlags *ff.CoreFlags) {
 }
 
 func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- error) {
+	defer close(res)
+
 	labelFlag, _ := cmd.Flags.GetFlag("label")
 	titleFlag, _ := cmd.Flags.GetFlag("title")
 	dir, _ := cmd.Flags.GetFlag("root-dir")
@@ -62,79 +59,26 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 		return
 	}
 
+	b, err := bookmark.New(titleFlag.GetValue(), args[0])
+	if err != nil {
+		res <- err
+		return
+	}
+
+	if titleFlag.GetValue() == titleFlag.GetDefault() {
+		err = b.TitleFromURL(ctx)
+
+		if err != nil {
+			res <- err
+			return
+		}
+	}
+
 	hierarchy := strings.Split(labelFlag.GetValue(), ",")
 	path := filepath.Join(home, dir.GetValue(), strings.Join(hierarchy, "."))
+	_, err = bookmark.Append(*b, path)
 
-	fh, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
-	if err != nil {
-		res <- err
-		return
-	}
-
-	if len(args) == 0 {
-		res <- ErrInvalidURL
-		return
-	}
-
-	bookmark := args[0]
-	_, err = url.ParseRequestURI(bookmark)
-	if err != nil {
-		res <- ErrInvalidURL
-		return
-	}
-
-	content, _ := io.ReadAll(fh)
-	defer fh.Close()
-
-	if ok := regex.MatchLines(content, bookmark); ok {
-		res <- ErrDuplicate
-		return
-	}
-
-	if titleFlag.GetValue() == titleFlag.GetDefault() {
-		title, err := title(ctx, args[0])
-		if err != nil {
-			res <- err
-			return
-		}
-
-		err = titleFlag.SetValue(title)
-		if err != nil {
-			res <- err
-			return
-		}
-	}
-
-	if titleFlag.GetValue() == titleFlag.GetDefault() {
-		res <- ErrInvalidTitle
-		return
-	}
-
-	_, err = fmt.Fprintf(fh, "%q %q\n", titleFlag.GetValue(), strings.Trim(args[0], " \r\n"))
 	if err != nil {
 		res <- err
 	}
-
-	close(res)
-}
-
-func title(ctx context.Context, url string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-
-	page, err := io.ReadAll(res.Body)
-	if err != nil {
-		return "", err
-	}
-
-	res.Body.Close()
-
-	return regex.FindTitle(page), nil
 }

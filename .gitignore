@@ -20,3 +20,6 @@ anchor
 
 # Go workspace file
 go.work
+
+# HTML files
+*.html

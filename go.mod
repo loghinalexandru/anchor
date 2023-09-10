@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/peterbourgon/ff/v4 v4.0.0-alpha.2
+	github.com/virtualtam/netscape-go/v2 v2.1.0
 )
 
 require (

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/loghinalexandru/anchor/internal/vcs"
+	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -37,6 +37,8 @@ func RegisterSync(root *ff.Command, rootFlags *ff.CoreFlags) {
 }
 
 func (c *syncCmd) handle(res chan<- error) {
+	defer close(res)
+
 	dir, _ := c.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
 
@@ -46,12 +48,10 @@ func (c *syncCmd) handle(res chan<- error) {
 	}
 
 	path := filepath.Join(home, dir.GetValue())
-	err = vcs.PushWithSSH(path)
+	err = storage.PushWithSSH(path)
 
 	if err != nil {
 		res <- err
 		return
 	}
-
-	close(res)
 }
