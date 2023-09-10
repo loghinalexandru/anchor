@@ -3,7 +3,6 @@ package subcommand
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -12,12 +11,11 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
-type initCmd ff.Command
-
 var (
-	ErrHomeDir   = errors.New("could not open home directory")
-	ErrCreateDir = errors.New("could not create anchor directory")
+	ErrInvalidRemote = errors.New("invalid remote URL")
 )
+
+type initCmd ff.Command
 
 func RegisterInit(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *initCmd
@@ -53,17 +51,22 @@ func (c *initCmd) handle(args []string, res chan<- error) {
 	home, err := os.UserHomeDir()
 
 	if err != nil {
-		res <- fmt.Errorf("%w with base: '%w'", ErrHomeDir, err)
+		res <- err
 		return
 	}
 
 	path := filepath.Join(home, dir.GetValue())
-
 	if repo.GetValue() == "true" {
+		if len(args) == 0 {
+			res <- ErrInvalidRemote
+			return
+		}
+
 		err := storage.CloneWithSSH(path, args[0])
 		if err != nil {
 			res <- err
 		}
+
 		return
 	}
 
@@ -71,7 +74,7 @@ func (c *initCmd) handle(args []string, res chan<- error) {
 		err = os.Mkdir(path, fs.ModePerm)
 
 		if err != nil {
-			res <- fmt.Errorf("%w with base: '%w'", ErrCreateDir, err)
+			res <- err
 			return
 		}
 	}

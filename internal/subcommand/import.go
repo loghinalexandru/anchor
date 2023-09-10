@@ -111,13 +111,14 @@ func traversal(basePath string, fileName string, node netscape.Folder) error {
 		}
 
 		_, err = bookmark.Append(*entry, filePath)
-		if err != nil {
+		if err != nil && !errors.Is(err, bookmark.ErrDuplicate) {
 			return err
 		}
 	}
 
 	for _, n := range node.Subfolders {
 		err := traversal(basePath, fileName, n)
+
 		if err != nil {
 			return err
 		}

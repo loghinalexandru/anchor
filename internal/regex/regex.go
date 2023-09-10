@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	regexpLine      = `(?im)^.*%s.*$`
+	regexpLine      = `(?im)^.+%s.+$`
 	regexpEndOfLine = `(?im)\s.%s.$`
 )
 

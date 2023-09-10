@@ -17,6 +17,7 @@ import (
 
 var (
 	ErrDuplicate    = errors.New("duplicate bookmark")
+	ErrArgsMismatch = errors.New("mismatch in line arguments")
 	ErrInvalidTitle = errors.New("could not infer title and no flag was set")
 )
 
@@ -37,6 +38,15 @@ func New(title string, rawURL string) (*Bookmark, error) {
 	}, nil
 }
 
+func NewFromLine(line string) (*Bookmark, error) {
+	title, url, err := Parse(line)
+	if err != nil {
+		return nil, err
+	}
+
+	return New(title, url)
+}
+
 func Append(b Bookmark, filePath string) (int, error) {
 	fh, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
 	if err != nil {
@@ -47,7 +57,7 @@ func Append(b Bookmark, filePath string) (int, error) {
 	defer fh.Close()
 
 	if ok := regex.MatchEndOfLines(content, b.url.String()); ok {
-		return 0, ErrDuplicate
+		return 0, fmt.Errorf("%q: %w", b.url.String(), ErrDuplicate)
 	}
 
 	return fmt.Fprintln(fh, b.String())
@@ -93,4 +103,25 @@ func findTitle(content []byte) string {
 	}
 
 	return string(match[1])
+}
+
+func Parse(line string) (title, url string, err error) {
+	quoted := false
+	line = strings.Trim(line, " \r\n")
+
+	res := strings.FieldsFunc(line, func(r rune) bool {
+		if r == '"' {
+			quoted = !quoted
+		}
+		return !quoted && r == ' '
+	})
+
+	if len(res) != 2 {
+		return title, url, ErrArgsMismatch
+	}
+
+	title = strings.Trim(res[0], " \"\r\n")
+	url = strings.Trim(res[1], " \"\r\n")
+
+	return title, url, nil
 }

@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/regex"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -18,6 +21,7 @@ func RegisterGet(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *getCmd
 	flags := ff.NewFlags("get").SetParent(rootFlags)
 	_ = flags.String('l', "label", DefaultLabel, "specify label hierarchy for each")
+	_ = flags.Bool('o', "open", false, "open specified link")
 
 	cmd = &getCmd{
 		Name:      "get",
@@ -44,6 +48,7 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
 	labelFlag, _ := c.Flags.GetFlag("label")
+	openFlag, _ := c.Flags.GetFlag("open")
 	dir, _ := c.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
 
@@ -69,13 +74,29 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 
 		fh.Close()
 
-		if len(args) == 0 {
-			fmt.Fprintf(os.Stdout, "%s", string(content))
-			continue
+		var pattern string
+		if len(args) >= 1 {
+			pattern = args[0]
 		}
 
-		for _, m := range regex.FindLines(content, args[0]) {
-			fmt.Fprintf(os.Stdout, "%s\n", string(m))
+		for _, l := range regex.FindLines(content, pattern) {
+			title, url, err := bookmark.Parse(string(l))
+			if err != nil {
+				fmt.Print(url)
+				res <- err
+				return
+			}
+
+			if openFlag.GetValue() == "true" {
+				err = open(url)
+				if err != nil {
+					res <- err
+				}
+
+				return
+			}
+
+			fmt.Fprintln(os.Stdout, title)
 		}
 	}
 }
@@ -94,4 +115,22 @@ func multiLevelPaths(rootDir string, labels ff.Flag) []string {
 	}
 
 	return paths
+}
+
+func open(url string) error {
+	var cmd string
+	var args []string
+
+	switch runtime.GOOS {
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start"}
+	case "darwin":
+		cmd = "open"
+	default:
+		cmd = "xdg-open"
+	}
+
+	args = append(args, url)
+	return exec.Command(cmd, args...).Start()
 }

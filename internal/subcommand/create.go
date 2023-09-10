@@ -17,7 +17,6 @@ const (
 
 var (
 	ErrInvalidURL   = errors.New("not a valid url")
-	ErrDuplicate    = errors.New("duplicate")
 	ErrInvalidTitle = errors.New("could not infer title and no flag was set")
 )
 
