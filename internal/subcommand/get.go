@@ -57,7 +57,7 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	tree, err := flatten(labelFlag.GetValue())
+	tree, err := flattenWithValidation(labelFlag.GetValue())
 	if err != nil {
 		res <- err
 		return

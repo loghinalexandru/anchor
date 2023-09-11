@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	defaultRoot = "root"
+	defaultTree = "root"
 )
 
 var (
@@ -15,9 +15,9 @@ var (
 	ErrInvalidLabel = errors.New("invalid label passed")
 )
 
-func flatten(labels string) (string, error) {
+func flattenWithValidation(labels string) (string, error) {
 	if labels == "" {
-		return defaultRoot, nil
+		return defaultTree, nil
 	}
 
 	fileName := flattenRep.Replace(labels)
@@ -26,4 +26,16 @@ func flatten(labels string) (string, error) {
 	}
 
 	return fileName, nil
+}
+
+func flatten(labels string) string {
+	if labels == "" {
+		return defaultTree
+	}
+
+	fileName := strings.TrimSpace(labels)
+	fileName = strings.ToLower(fileName)
+	fileName = flattenRep.Replace(fileName)
+
+	return fileName
 }

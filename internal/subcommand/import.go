@@ -73,9 +73,9 @@ func (c *importCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	path := filepath.Join(home, dir.GetValue())
+	rootDir := filepath.Join(home, dir.GetValue())
 	doc, _ := netscape.Unmarshal(content)
-	err = traversal(path, "", doc.Root)
+	err = traversal(rootDir, "", doc.Root)
 
 	if err != nil {
 		res <- err
@@ -83,42 +83,29 @@ func (c *importCmd) handle(args []string, res chan<- error) {
 }
 
 // Refactor this
-func traversal(basePath string, fileName string, node netscape.Folder) error {
+func traversal(rootDir string, labels string, node netscape.Folder) error {
 	isRoot, _ := regexp.MatchString("(?i)bookmark|bar", node.Name)
 
-	// Use flatten()
 	if len(node.Bookmarks) > 0 && !isRoot {
-		label := strings.ReplaceAll(node.Name, " ", "")
-		label = strings.ToLower(label)
-
-		if fileName != "" {
-			fileName = fmt.Sprintf("%s.%s", fileName, label)
-		} else {
-			fileName = label
-		}
+		labels = fmt.Sprintf("%s %s", labels, strings.ReplaceAll(node.Name, " ", ""))
 	}
 
+	path := filepath.Join(rootDir, flatten(labels))
+
 	for _, b := range node.Bookmarks {
-		var filePath string
 		entry, err := bookmark.New(b.Title, b.URL)
 		if err != nil {
 			return err
 		}
 
-		if fileName == "" {
-			filePath = filepath.Join(basePath, "root")
-		} else {
-			filePath = filepath.Join(basePath, fileName)
-		}
-
-		_, err = bookmark.Append(*entry, filePath)
+		_, err = bookmark.Append(*entry, path)
 		if err != nil && !errors.Is(err, bookmark.ErrDuplicate) {
 			return err
 		}
 	}
 
 	for _, n := range node.Subfolders {
-		err := traversal(basePath, fileName, n)
+		err := traversal(rootDir, labels, n)
 
 		if err != nil {
 			return err
