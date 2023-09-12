@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
@@ -115,4 +116,14 @@ func traversal(rootDir string, labels string, node netscape.Folder) error {
 	}
 
 	return nil
+}
+
+// Fix this random root
+func format(labels string) string {
+	if labels == "" {
+		return "root"
+	}
+
+	exp := regexp.MustCompile(`[^a-z0-9-\.]`)
+	return exp.ReplaceAllString(strings.ToLower(labels), "")
 }

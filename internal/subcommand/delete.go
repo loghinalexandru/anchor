@@ -3,18 +3,12 @@ package subcommand
 import (
 	"bytes"
 	"context"
-	"errors"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 
-	"github.com/loghinalexandru/anchor/internal/regex"
 	"github.com/peterbourgon/ff/v4"
-)
-
-var (
-	ErrInvalidPattern = errors.New("invalid pattern")
 )
 
 type deleteCmd ff.Command
@@ -56,7 +50,7 @@ func (c *deleteCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	tree, err := formatWithValidation(labelFlag.GetValue())
+	tree, err := formatWithValidation(labelFlag)
 	if err != nil {
 		res <- err
 		return
@@ -72,12 +66,13 @@ func (c *deleteCmd) handle(args []string, res chan<- error) {
 	defer fh.Close()
 
 	if len(args) == 0 {
-		res <- ErrInvalidPattern
+		err = os.Remove(path)
+		res <- err
 		return
 	}
 
 	content, _ := io.ReadAll(fh)
-	ll := regex.FindLines(content, args[0])
+	ll := findLines(content, args[0])
 	for _, l := range ll {
 		l = append(l, byte('\n'))
 		content = bytes.ReplaceAll(content, l, []byte(""))

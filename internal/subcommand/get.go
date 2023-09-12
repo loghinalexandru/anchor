@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
-	"github.com/loghinalexandru/anchor/internal/regex"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -57,7 +56,7 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	tree, err := formatWithValidation(labelFlag.GetValue())
+	tree, err := formatWithValidation(labelFlag)
 	if err != nil {
 		res <- err
 		return
@@ -89,7 +88,7 @@ func (c *getCmd) handle(args []string, res chan<- error) {
 			pattern = args[0]
 		}
 
-		for _, l := range regex.FindLines(content, pattern) {
+		for _, l := range findLines(content, pattern) {
 			title, url, err := bookmark.Parse(string(l))
 			if err != nil {
 				fmt.Print(url)

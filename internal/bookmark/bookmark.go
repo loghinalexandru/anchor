@@ -11,8 +11,10 @@ import (
 	"os"
 	"regexp"
 	"strings"
+)
 
-	"github.com/loghinalexandru/anchor/internal/regex"
+const (
+	regexpEndOfLine = `(?im)\s.%s.$`
 )
 
 var (
@@ -56,7 +58,7 @@ func Append(b Bookmark, filePath string) (int, error) {
 	content, _ := io.ReadAll(fh)
 	defer fh.Close()
 
-	if ok := regex.MatchEndOfLines(content, b.url.String()); ok {
+	if ok := matchEndOfLines(content, b.url.String()); ok {
 		return 0, fmt.Errorf("%q: %w", b.url.String(), ErrDuplicate)
 	}
 
@@ -94,17 +96,6 @@ func (b *Bookmark) TitleFromURL(ctx context.Context) error {
 	return nil
 }
 
-func findTitle(content []byte) string {
-	titleMatch := regexp.MustCompile("<title>(?P<title>.*)</title>")
-	match := titleMatch.FindSubmatch(content)
-
-	if len(match) == 0 {
-		return ""
-	}
-
-	return string(match[1])
-}
-
 func Parse(line string) (title, url string, err error) {
 	quoted := false
 	line = strings.Trim(line, " \r\n")
@@ -124,4 +115,20 @@ func Parse(line string) (title, url string, err error) {
 	url = strings.Trim(res[1], " \"\r\n")
 
 	return title, url, nil
+}
+
+func findTitle(content []byte) string {
+	titleMatch := regexp.MustCompile("<title>(?P<title>.*)</title>")
+	match := titleMatch.FindSubmatch(content)
+
+	if len(match) == 0 {
+		return ""
+	}
+
+	return string(match[1])
+}
+
+func matchEndOfLines(content []byte, pattern string) bool {
+	regex := regexp.MustCompile(fmt.Sprintf(regexpEndOfLine, regexp.QuoteMeta(pattern)))
+	return regex.Match(content)
 }

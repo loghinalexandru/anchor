@@ -72,7 +72,7 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 		}
 	}
 
-	tree, err := formatWithValidation(labelFlag.GetValue())
+	tree, err := formatWithValidation(labelFlag)
 
 	if err != nil {
 		res <- err
