@@ -56,7 +56,7 @@ func (c *deleteCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	tree, err := flattenWithValidation(labelFlag.GetValue())
+	tree, err := formatWithValidation(labelFlag.GetValue())
 	if err != nil {
 		res <- err
 		return

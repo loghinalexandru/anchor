@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
@@ -82,15 +81,18 @@ func (c *importCmd) handle(args []string, res chan<- error) {
 	}
 }
 
-// Refactor this
 func traversal(rootDir string, labels string, node netscape.Folder) error {
 	isRoot, _ := regexp.MatchString("(?i)bookmark|bar", node.Name)
 
 	if len(node.Bookmarks) > 0 && !isRoot {
-		labels = fmt.Sprintf("%s %s", labels, strings.ReplaceAll(node.Name, " ", ""))
+		if labels == "" {
+			labels = node.Name
+		} else {
+			labels = fmt.Sprintf("%s.%s", labels, node.Name)
+		}
 	}
 
-	path := filepath.Join(rootDir, flatten(labels))
+	path := filepath.Join(rootDir, format(labels))
 
 	for _, b := range node.Bookmarks {
 		entry, err := bookmark.New(b.Title, b.URL)
