@@ -3,12 +3,10 @@ package subcommand
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
@@ -75,25 +73,21 @@ func (c *importCmd) handle(args []string, res chan<- error) {
 
 	rootDir := filepath.Join(home, dir.GetValue())
 	doc, _ := netscape.Unmarshal(content)
-	err = traversal(rootDir, "", doc.Root)
+	err = traversal(rootDir, nil, doc.Root)
 
 	if err != nil {
 		res <- err
 	}
 }
 
-func traversal(rootDir string, labels string, node netscape.Folder) error {
-	isRoot, _ := regexp.MatchString("(?i)bookmark|bar", node.Name)
+func traversal(rootDir string, labels []string, node netscape.Folder) error {
+	userDefined, _ := regexp.MatchString("(?i)bookmark|bar", node.Name)
 
-	if len(node.Bookmarks) > 0 && !isRoot {
-		if labels == "" {
-			labels = node.Name
-		} else {
-			labels = fmt.Sprintf("%s.%s", labels, node.Name)
-		}
+	if len(node.Bookmarks) > 0 && !userDefined {
+		labels = append(labels, node.Name)
 	}
 
-	path := filepath.Join(rootDir, format(labels))
+	path := filepath.Join(rootDir, formatLabels(labels))
 
 	for _, b := range node.Bookmarks {
 		entry, err := bookmark.New(b.Title, b.URL)
@@ -116,14 +110,4 @@ func traversal(rootDir string, labels string, node netscape.Folder) error {
 	}
 
 	return nil
-}
-
-// Fix this random root
-func format(labels string) string {
-	if labels == "" {
-		return "root"
-	}
-
-	exp := regexp.MustCompile(`[^a-z0-9-\.]`)
-	return exp.ReplaceAllString(strings.ToLower(labels), "")
 }

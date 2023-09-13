@@ -49,22 +49,6 @@ func NewFromLine(line string) (*Bookmark, error) {
 	return New(title, url)
 }
 
-func Append(b Bookmark, filePath string) (int, error) {
-	fh, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
-	if err != nil {
-		return 0, err
-	}
-
-	content, _ := io.ReadAll(fh)
-	defer fh.Close()
-
-	if ok := matchEndOfLines(content, b.url.String()); ok {
-		return 0, fmt.Errorf("%q: %w", b.url.String(), ErrDuplicate)
-	}
-
-	return fmt.Fprintln(fh, b.String())
-}
-
 func (b Bookmark) String() string {
 	return fmt.Sprintf("%q %q", b.title, strings.Trim(b.url.String(), " \r\n"))
 }
@@ -94,6 +78,22 @@ func (b *Bookmark) TitleFromURL(ctx context.Context) error {
 
 	b.title = title
 	return nil
+}
+
+func Append(b Bookmark, filePath string) (int, error) {
+	fh, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
+	if err != nil {
+		return 0, err
+	}
+
+	content, _ := io.ReadAll(fh)
+	defer fh.Close()
+
+	if ok := matchEndOfLines(content, b.url.String()); ok {
+		return 0, fmt.Errorf("%q: %w", b.url.String(), ErrDuplicate)
+	}
+
+	return fmt.Fprintln(fh, b.String())
 }
 
 func Parse(line string) (title, url string, err error) {

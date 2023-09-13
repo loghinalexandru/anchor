@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	ErrInvalidRemote = errors.New("invalid remote URL")
+	ErrInvalidURL = errors.New("not a valid URL")
 )
 
 type initCmd ff.Command
@@ -58,7 +58,7 @@ func (c *initCmd) handle(args []string, res chan<- error) {
 	path := filepath.Join(home, dir.GetValue())
 	if repo.GetValue() == "true" {
 		if len(args) == 0 {
-			res <- ErrInvalidRemote
+			res <- ErrInvalidURL
 			return
 		}
 

@@ -3,6 +3,7 @@ package subcommand
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -11,52 +12,74 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
-type deleteCmd ff.Command
+const (
+	msgDeleteConfirmation = "You are about to delete %s. Proceed?"
+)
 
-func RegisterDelete(root *ff.Command, rootFlags *ff.CoreFlags) {
-	var cmd *deleteCmd
-	flags := ff.NewFlags("delete").SetParent(rootFlags)
-	_ = flags.StringSet('l', "label", "add label in order of appearance")
-
-	cmd = &deleteCmd{
-		Name:      "delete",
-		Usage:     "delete",
-		ShortHelp: "remove a bookmark",
-		Flags:     flags,
-		Exec: func(ctx context.Context, args []string) error {
-			res := make(chan error, 1)
-			go cmd.handle(args, res)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-res:
-				return err
-			}
-		},
-	}
-
-	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
+type delete struct {
+	command *ff.Command
+	labels  *[]string
 }
 
-func (c *deleteCmd) handle(args []string, res chan<- error) {
+func RegisterDelete(root *ff.Command, rootFlags *ff.CoreFlags) {
+	var d delete
+	var labels []string
+
+	flags := ff.NewFlags("delete").SetParent(rootFlags)
+	_ = flags.StringSetVar(&labels, 'l', "label", "add label in order of appearance")
+
+	d = delete{
+		command: &ff.Command{
+			Name:      "delete",
+			Usage:     "delete",
+			ShortHelp: "remove a bookmark",
+			Flags:     flags,
+			Exec: func(ctx context.Context, args []string) error {
+				res := make(chan error, 1)
+				go d.handle(args, res)
+
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case err := <-res:
+					return err
+				}
+			},
+		},
+		labels: &labels,
+	}
+
+	root.Subcommands = append(root.Subcommands, d.command)
+}
+
+func (d delete) handle(args []string, res chan<- error) {
 	defer close(res)
 
-	labelFlag, _ := c.Flags.GetFlag("label")
-	dir, _ := c.Flags.GetFlag("root-dir")
+	dir, _ := d.command.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
 	if err != nil {
 		res <- err
 		return
 	}
 
-	tree, err := formatWithValidation(labelFlag)
+	err = validate(*d.labels)
 	if err != nil {
 		res <- err
 		return
 	}
 
+	tree := formatLabels(*d.labels)
 	path := filepath.Join(home, dir.GetValue(), tree)
+
+	if len(args) == 0 {
+		ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
+		if ok {
+			err = os.Remove(path)
+			res <- err
+		}
+		return
+	}
+
 	fh, err := os.OpenFile(path, os.O_RDWR, fs.ModePerm)
 	if err != nil {
 		res <- err
@@ -65,14 +88,14 @@ func (c *deleteCmd) handle(args []string, res chan<- error) {
 
 	defer fh.Close()
 
-	if len(args) == 0 {
-		err = os.Remove(path)
-		res <- err
+	content, _ := io.ReadAll(fh)
+	ll := findLines(content, args[0])
+	ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(ll))), os.Stdin)
+
+	if !ok {
 		return
 	}
 
-	content, _ := io.ReadAll(fh)
-	ll := findLines(content, args[0])
 	for _, l := range ll {
 		l = append(l, byte('\n'))
 		content = bytes.ReplaceAll(content, l, []byte(""))

@@ -2,7 +2,6 @@ package subcommand
 
 import (
 	"context"
-	"errors"
 	"os"
 	"path/filepath"
 
@@ -10,46 +9,48 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
-var (
-	ErrInvalidURL   = errors.New("not a valid url")
-	ErrInvalidTitle = errors.New("could not infer title and no flag was set")
-)
-
-type createCmd ff.Command
-
-func RegisterCreate(root *ff.Command, rootFlags *ff.CoreFlags) {
-	var cmd *createCmd
-	flags := ff.NewFlags("create").SetParent(rootFlags)
-	_ = flags.StringSet('l', "label", "add labels in order of appearance")
-	_ = flags.String('t', "title", "", "add custom title")
-
-	cmd = &createCmd{
-		Name:      "create",
-		Usage:     "crate",
-		ShortHelp: "add a bookmark with set labels",
-		Flags:     flags,
-		Exec: func(ctx context.Context, args []string) error {
-			res := make(chan error, 1)
-			go cmd.handle(ctx, args, res)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-res:
-				return err
-			}
-		},
-	}
-
-	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
+type create struct {
+	command *ff.Command
+	labels  *[]string
 }
 
-func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- error) {
+func RegisterCreate(root *ff.Command, rootFlags *ff.CoreFlags) {
+	var cr create
+	var labels []string
+
+	flags := ff.NewFlags("create").SetParent(rootFlags)
+	_ = flags.StringSetVar(&labels, 'l', "label", "add labels in order of appearance")
+	_ = flags.String('t', "title", "", "add custom title")
+
+	cr = create{
+		command: &ff.Command{
+			Name:      "create",
+			Usage:     "crate",
+			ShortHelp: "add a bookmark with set labels",
+			Flags:     flags,
+			Exec: func(ctx context.Context, args []string) error {
+				res := make(chan error, 1)
+				go cr.handle(ctx, args, res)
+
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case err := <-res:
+					return err
+				}
+			},
+		},
+		labels: &labels,
+	}
+
+	root.Subcommands = append(root.Subcommands, cr.command)
+}
+
+func (c create) handle(ctx context.Context, args []string, res chan<- error) {
 	defer close(res)
 
-	labelFlag, _ := cmd.Flags.GetFlag("label")
-	titleFlag, _ := cmd.Flags.GetFlag("title")
-	dir, _ := cmd.Flags.GetFlag("root-dir")
+	titleFlag, _ := c.command.Flags.GetFlag("title")
+	dir, _ := c.command.Flags.GetFlag("root-dir")
 	home, err := os.UserHomeDir()
 
 	if err != nil {
@@ -72,13 +73,13 @@ func (cmd *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 		}
 	}
 
-	tree, err := formatWithValidation(labelFlag)
-
+	err = validate(*c.labels)
 	if err != nil {
 		res <- err
 		return
 	}
 
+	tree := formatLabels(*c.labels)
 	path := filepath.Join(home, dir.GetValue(), tree)
 	_, err = bookmark.Append(*b, path)
 
