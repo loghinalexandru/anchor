@@ -2,8 +2,6 @@ package subcommand
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
@@ -39,16 +37,13 @@ func RegisterSync(root *ff.Command, rootFlags *ff.CoreFlags) {
 func (c *syncCmd) handle(res chan<- error) {
 	defer close(res)
 
-	dir, _ := c.Flags.GetFlag("root-dir")
-	home, err := os.UserHomeDir()
-
+	rootDir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
 	}
 
-	path := filepath.Join(home, dir.GetValue())
-	err = storage.PushWithSSH(path)
+	err = storage.PushWithSSH(rootDir)
 
 	if err != nil {
 		res <- err

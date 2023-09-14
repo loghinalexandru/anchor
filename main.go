@@ -14,9 +14,6 @@ import (
 
 func main() {
 	rootFlags := ff.NewFlags("anchor")
-	_ = rootFlags.Bool('v', "verbose", false, "increase log verbosity")
-	_ = rootFlags.String('d', "root-dir", ".anchor", "change default directory name")
-
 	rootCmd := &ff.Command{
 		Name:  "anchor",
 		Usage: "anchor [FLAGS] <SUBCOMMAND>",

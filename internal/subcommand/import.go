@@ -3,7 +3,9 @@ package subcommand
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,8 +23,8 @@ type importCmd ff.Command
 
 func RegisterImport(root *ff.Command, rootFlags *ff.CoreFlags) {
 	var cmd *importCmd
-	flags := ff.NewFlags("import").SetParent(rootFlags)
 
+	flags := ff.NewFlags("import").SetParent(rootFlags)
 	cmd = &importCmd{
 		Name:      "import",
 		Usage:     "import",
@@ -47,8 +49,7 @@ func RegisterImport(root *ff.Command, rootFlags *ff.CoreFlags) {
 func (c *importCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
-	dir, _ := c.Flags.GetFlag("root-dir")
-	home, err := os.UserHomeDir()
+	rootDir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
@@ -71,7 +72,6 @@ func (c *importCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	rootDir := filepath.Join(home, dir.GetValue())
 	doc, _ := netscape.Unmarshal(content)
 	err = traversal(rootDir, nil, doc.Root)
 
@@ -88,6 +88,10 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 	}
 
 	path := filepath.Join(rootDir, formatLabels(labels))
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
+	if err != nil {
+		return err
+	}
 
 	for _, b := range node.Bookmarks {
 		entry, err := bookmark.New(b.Title, b.URL)
@@ -95,10 +99,19 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 			return err
 		}
 
-		_, err = bookmark.Append(*entry, path)
+		err = entry.Write(file)
 		if err != nil && !errors.Is(err, bookmark.ErrDuplicate) {
 			return err
 		}
+
+		if errors.Is(err, bookmark.ErrDuplicate) {
+			fmt.Println(err)
+		}
+	}
+
+	err = file.Close()
+	if err != nil {
+		return err
 	}
 
 	for _, n := range node.Subfolders {

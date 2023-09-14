@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
 
 const (
 	defaultLabel   = "root"
+	defaultDir     = ".anchor"
 	regexpNotLabel = `[^a-z0-9-\.]`
 	regexpLine     = `(?im)^.+%s.+$`
 )
@@ -29,6 +32,16 @@ func validate(labels []string) error {
 	}
 
 	return nil
+}
+
+func rootDir() (string, error) {
+	home, err := os.UserHomeDir()
+
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(home, defaultDir), nil
 }
 
 func formatLabels(labels []string) string {

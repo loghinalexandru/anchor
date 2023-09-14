@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
@@ -16,66 +15,58 @@ import (
 )
 
 type get struct {
-	command *ff.Command
-	labels  *[]string
+	command  ff.Command
+	labels   []string
+	fullFlag bool
+	openFlag bool
 }
 
 func RegisterGet(root *ff.Command, rootFlags *ff.CoreFlags) {
-	var g get
-	var labels []string
+	cmd := get{}
 
 	flags := ff.NewFlags("get").SetParent(rootFlags)
-	_ = flags.StringSetVar(&labels, 'l', "label", "specify label hierarchy for each")
-	_ = flags.Bool('f', "full", false, "show full bookmark entry")
-	_ = flags.Bool('o', "open", false, "open specified link")
+	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy for each")
+	_ = flags.BoolVar(&cmd.fullFlag, 'f', "full", false, "show full bookmark entry")
+	_ = flags.BoolVar(&cmd.openFlag, 'o', "open", false, "open specified link")
 
-	g = get{
-		command: &ff.Command{
-			Name:      "get",
-			Usage:     "get",
-			ShortHelp: "get existing bookmarks",
-			Flags:     flags,
-			Exec: func(ctx context.Context, args []string) error {
-				res := make(chan error, 1)
-				go g.handle(args, res)
+	cmd.command = ff.Command{
+		Name:      "get",
+		Usage:     "get",
+		ShortHelp: "get existing bookmarks",
+		Flags:     flags,
+		Exec: func(ctx context.Context, args []string) error {
+			res := make(chan error, 1)
+			go cmd.handle(args, res)
 
-				select {
-				case <-ctx.Done():
-					return ctx.Err()
-				case err := <-res:
-					return err
-				}
-			},
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case err := <-res:
+				return err
+			}
 		},
-		labels: &labels,
 	}
 
-	root.Subcommands = append(root.Subcommands, g.command)
+	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (g get) handle(args []string, res chan<- error) {
+func (g *get) handle(args []string, res chan<- error) {
 	defer close(res)
 
-	o, _ := g.command.Flags.GetFlag("open")
-	f, _ := g.command.Flags.GetFlag("full")
-	openFlag, _ := strconv.ParseBool(o.GetValue())
-	fullFlag, _ := strconv.ParseBool(f.GetValue())
-	dir, _ := g.command.Flags.GetFlag("root-dir")
-	home, err := os.UserHomeDir()
-
+	rootDir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
 	}
 
-	err = validate(*g.labels)
+	err = validate(g.labels)
 	if err != nil {
 		res <- err
 		return
 	}
 
-	tree := formatLabels(*g.labels)
-	paths, err := multiLevelPaths(filepath.Join(home, dir.GetValue()), tree)
+	tree := formatLabels(g.labels)
+	paths, err := multiLevelPaths(rootDir, tree)
 	if err != nil {
 		res <- err
 		return
@@ -109,7 +100,7 @@ func (g get) handle(args []string, res chan<- error) {
 				return
 			}
 
-			if openFlag {
+			if g.openFlag {
 				err = open(url)
 				if err != nil {
 					res <- err
@@ -118,7 +109,7 @@ func (g get) handle(args []string, res chan<- error) {
 				return
 			}
 
-			if fullFlag {
+			if g.fullFlag {
 				fmt.Fprintln(os.Stdout, title, url)
 			} else {
 				fmt.Fprintln(os.Stdout, title)

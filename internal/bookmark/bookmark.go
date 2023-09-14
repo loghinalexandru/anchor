@@ -5,16 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
-)
-
-const (
-	regexpEndOfLine = `(?im)\s.%s.$`
 )
 
 var (
@@ -34,8 +28,9 @@ func New(title string, rawURL string) (*Bookmark, error) {
 		return nil, err
 	}
 
+	rep := strings.NewReplacer("\"", "", "\n", "", "\r", "")
 	return &Bookmark{
-		title: title,
+		title: rep.Replace(title),
 		url:   url,
 	}, nil
 }
@@ -49,8 +44,8 @@ func NewFromLine(line string) (*Bookmark, error) {
 	return New(title, url)
 }
 
-func (b Bookmark) String() string {
-	return fmt.Sprintf("%q %q", b.title, strings.Trim(b.url.String(), " \r\n"))
+func (b *Bookmark) String() string {
+	return fmt.Sprintf("%q %q", b.title, b.url.String())
 }
 
 func (b *Bookmark) TitleFromURL(ctx context.Context) error {
@@ -80,20 +75,24 @@ func (b *Bookmark) TitleFromURL(ctx context.Context) error {
 	return nil
 }
 
-func Append(b Bookmark, filePath string) (int, error) {
-	fh, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
+func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
+	_, err := rw.Seek(0, io.SeekStart)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	content, _ := io.ReadAll(fh)
-	defer fh.Close()
-
-	if ok := matchEndOfLines(content, b.url.String()); ok {
-		return 0, fmt.Errorf("%q: %w", b.url.String(), ErrDuplicate)
+	content, err := io.ReadAll(rw)
+	if err != nil {
+		return err
 	}
 
-	return fmt.Fprintln(fh, b.String())
+	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.url.String())))
+	if exp.Match(content) {
+		return fmt.Errorf("%s: %w", b.url, ErrDuplicate)
+	}
+
+	_, err = fmt.Fprintln(rw, b.String())
+	return err
 }
 
 func Parse(line string) (title, url string, err error) {
@@ -108,6 +107,8 @@ func Parse(line string) (title, url string, err error) {
 	})
 
 	if len(res) != 2 {
+		fmt.Println(len(res))
+		fmt.Println(line)
 		return title, url, ErrArgsMismatch
 	}
 
@@ -126,9 +127,4 @@ func findTitle(content []byte) string {
 	}
 
 	return string(match[1])
-}
-
-func matchEndOfLines(content []byte, pattern string) bool {
-	regex := regexp.MustCompile(fmt.Sprintf(regexpEndOfLine, regexp.QuoteMeta(pattern)))
-	return regex.Match(content)
 }

@@ -17,59 +17,54 @@ const (
 )
 
 type delete struct {
-	command *ff.Command
-	labels  *[]string
+	command ff.Command
+	labels  []string
 }
 
 func RegisterDelete(root *ff.Command, rootFlags *ff.CoreFlags) {
-	var d delete
-	var labels []string
+	cmd := delete{}
 
 	flags := ff.NewFlags("delete").SetParent(rootFlags)
-	_ = flags.StringSetVar(&labels, 'l', "label", "add label in order of appearance")
+	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
 
-	d = delete{
-		command: &ff.Command{
-			Name:      "delete",
-			Usage:     "delete",
-			ShortHelp: "remove a bookmark",
-			Flags:     flags,
-			Exec: func(ctx context.Context, args []string) error {
-				res := make(chan error, 1)
-				go d.handle(args, res)
+	cmd.command = ff.Command{
+		Name:      "delete",
+		Usage:     "delete",
+		ShortHelp: "remove a bookmark",
+		Flags:     flags,
+		Exec: func(ctx context.Context, args []string) error {
+			res := make(chan error, 1)
+			go cmd.handle(args, res)
 
-				select {
-				case <-ctx.Done():
-					return ctx.Err()
-				case err := <-res:
-					return err
-				}
-			},
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case err := <-res:
+				return err
+			}
 		},
-		labels: &labels,
 	}
 
-	root.Subcommands = append(root.Subcommands, d.command)
+	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (d delete) handle(args []string, res chan<- error) {
+func (d *delete) handle(args []string, res chan<- error) {
 	defer close(res)
 
-	dir, _ := d.command.Flags.GetFlag("root-dir")
-	home, err := os.UserHomeDir()
+	rootDir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
 	}
 
-	err = validate(*d.labels)
+	err = validate(d.labels)
 	if err != nil {
 		res <- err
 		return
 	}
 
-	tree := formatLabels(*d.labels)
-	path := filepath.Join(home, dir.GetValue(), tree)
+	tree := formatLabels(d.labels)
+	path := filepath.Join(rootDir, tree)
 
 	if len(args) == 0 {
 		ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
