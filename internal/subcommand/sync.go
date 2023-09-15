@@ -9,9 +9,9 @@ import (
 
 type syncCmd ff.Command
 
-func RegisterSync(root *ff.Command, rootFlags *ff.CoreFlags) {
+func RegisterSync(root *ff.Command, rootFlags *ff.FlagSet) {
 	var cmd *syncCmd
-	flags := ff.NewFlags("sync").SetParent(rootFlags)
+	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
 
 	cmd = &syncCmd{
 		Name:      "sync",

@@ -19,11 +19,11 @@ type initialize struct {
 	repoFlag bool
 }
 
-func RegisterInit(root *ff.Command, rootFlags *ff.CoreFlags) {
+func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd := initialize{}
 
-	flags := ff.NewFlags("init").SetParent(rootFlags)
-	_ = flags.BoolVar(&cmd.repoFlag, 'r', "repository", false, "used in order to init a git repository")
+	flags := ff.NewFlagSet("init").SetParent(rootFlags)
+	_ = flags.BoolVar(&cmd.repoFlag, 'r', "repository", "used in order to init a git repository")
 
 	cmd.command = ff.Command{
 		Name:      "init",

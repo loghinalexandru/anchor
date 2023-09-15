@@ -17,10 +17,10 @@ type create struct {
 	title   string
 }
 
-func RegisterCreate(root *ff.Command, rootFlags *ff.CoreFlags) {
+func RegisterCreate(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd := create{}
 
-	flags := ff.NewFlags("create").SetParent(rootFlags)
+	flags := ff.NewFlagSet("create").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add labels in order of appearance")
 	_ = flags.StringVar(&cmd.title, 't', "title", "", "add custom title")
 

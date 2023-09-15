@@ -11,10 +11,12 @@ import (
 	"strings"
 )
 
+// Refactor this
 const (
 	defaultLabel   = "root"
 	defaultDir     = ".anchor"
-	regexpNotLabel = `[^a-z0-9-\.]`
+	regexpNotLabel = `[^a-z0-9-]`
+	regexpLabel    = `^[a-z0-9-]+$`
 	regexpLine     = `(?im)^.+%s.+$`
 )
 
@@ -23,7 +25,7 @@ var (
 )
 
 func validate(labels []string) error {
-	exp := regexp.MustCompile(`^[a-z0-9-\.]+$`)
+	exp := regexp.MustCompile(regexpLabel)
 
 	for _, l := range labels {
 		if !exp.MatchString(l) {
@@ -49,11 +51,13 @@ func formatLabels(labels []string) string {
 		return defaultLabel
 	}
 
-	tree := strings.Join(labels, ".")
-	tree = strings.ToLower(tree)
-
 	exp := regexp.MustCompile(regexpNotLabel)
-	return exp.ReplaceAllString(tree, "")
+	for i, l := range labels {
+		labels[i] = exp.ReplaceAllString(l, "")
+	}
+
+	tree := strings.Join(labels, ".")
+	return strings.ToLower(tree)
 }
 
 func confirmation(s string, in io.Reader) bool {

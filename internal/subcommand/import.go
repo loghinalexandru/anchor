@@ -21,10 +21,10 @@ var (
 
 type importCmd ff.Command
 
-func RegisterImport(root *ff.Command, rootFlags *ff.CoreFlags) {
+func RegisterImport(root *ff.Command, rootFlags *ff.FlagSet) {
 	var cmd *importCmd
 
-	flags := ff.NewFlags("import").SetParent(rootFlags)
+	flags := ff.NewFlagSet("import").SetParent(rootFlags)
 	cmd = &importCmd{
 		Name:      "import",
 		Usage:     "import",

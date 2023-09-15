@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	rootFlags := ff.NewFlags("anchor")
+	rootFlags := ff.NewFlagSet("anchor")
 	rootCmd := &ff.Command{
 		Name:  "anchor",
 		Usage: "anchor [FLAGS] <SUBCOMMAND>",
@@ -26,6 +26,7 @@ func main() {
 	subcommand.RegisterDelete(rootCmd, rootFlags)
 	subcommand.RegisterSync(rootCmd, rootFlags)
 	subcommand.RegisterImport(rootCmd, rootFlags)
+	subcommand.RegisterTree(rootCmd, rootFlags)
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	err := rootCmd.ParseAndRun(ctx, os.Args[1:])

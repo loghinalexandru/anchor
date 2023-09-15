@@ -21,13 +21,13 @@ type get struct {
 	openFlag bool
 }
 
-func RegisterGet(root *ff.Command, rootFlags *ff.CoreFlags) {
+func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd := get{}
 
-	flags := ff.NewFlags("get").SetParent(rootFlags)
+	flags := ff.NewFlagSet("get").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy for each")
-	_ = flags.BoolVar(&cmd.fullFlag, 'f', "full", false, "show full bookmark entry")
-	_ = flags.BoolVar(&cmd.openFlag, 'o', "open", false, "open specified link")
+	_ = flags.BoolVar(&cmd.fullFlag, 'f', "full", "show full bookmark entry")
+	_ = flags.BoolVar(&cmd.openFlag, 'o', "open", "open specified link")
 
 	cmd.command = ff.Command{
 		Name:      "get",

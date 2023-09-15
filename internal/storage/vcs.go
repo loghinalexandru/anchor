@@ -30,23 +30,23 @@ func PushWithSSH(path string) error {
 		return err
 	}
 
-	tree, _ := repo.Worktree()
-	status, err := tree.Status()
-	if err != nil || status.IsClean() {
-		return err
-	}
-
 	auth, err := ssh.NewSSHAgentAuth("git")
 	if err != nil {
 		return err
 	}
 
+	tree, _ := repo.Worktree()
 	err = tree.Pull(&git.PullOptions{
 		RemoteName: "origin",
 		Auth:       auth,
 	})
 
 	if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+		return err
+	}
+
+	status, err := tree.Status()
+	if err != nil || status.IsClean() {
 		return err
 	}
 

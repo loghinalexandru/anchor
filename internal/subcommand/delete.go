@@ -21,10 +21,10 @@ type delete struct {
 	labels  []string
 }
 
-func RegisterDelete(root *ff.Command, rootFlags *ff.CoreFlags) {
+func RegisterDelete(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd := delete{}
 
-	flags := ff.NewFlags("delete").SetParent(rootFlags)
+	flags := ff.NewFlagSet("delete").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
 
 	cmd.command = ff.Command{
