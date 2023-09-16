@@ -14,6 +14,7 @@ import (
 
 // Refactor this
 const (
+	stdFileMode    = os.FileMode(0644)
 	stdLabel       = "root"
 	stdDir         = ".anchor"
 	stdSeparator   = "."
@@ -28,7 +29,6 @@ var (
 
 func validate(labels []string) error {
 	exp := regexp.MustCompile(regexpLabel)
-
 	for _, l := range labels {
 		if !exp.MatchString(l) {
 			return fmt.Errorf("%s: %w", l, ErrInvalidLabel)

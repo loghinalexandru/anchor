@@ -3,7 +3,6 @@ package subcommand
 import (
 	"context"
 	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -78,7 +77,7 @@ func (c *create) handle(ctx context.Context, args []string, res chan<- error) {
 	tree := fileFrom(c.labels)
 	path := filepath.Join(rootDir, tree)
 
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, stdFileMode)
 	if err != nil {
 		res <- err
 		return

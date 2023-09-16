@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -88,7 +87,7 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 	}
 
 	path := filepath.Join(rootDir, fileFrom(labels))
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, stdFileMode)
 	if err != nil {
 		return err
 	}

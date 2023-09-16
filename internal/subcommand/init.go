@@ -3,7 +3,6 @@ package subcommand
 import (
 	"context"
 	"errors"
-	"io/fs"
 	"os"
 
 	"github.com/loghinalexandru/anchor/internal/storage"
@@ -70,7 +69,7 @@ func (ini *initialize) handle(args []string, res chan<- error) {
 	}
 
 	if _, err := os.Stat(rootDir); os.IsNotExist(err) {
-		err = os.Mkdir(rootDir, fs.ModePerm)
+		err = os.Mkdir(rootDir, stdFileMode)
 
 		if err != nil {
 			res <- err

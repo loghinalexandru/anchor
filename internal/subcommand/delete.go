@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -75,7 +74,7 @@ func (d *delete) handle(args []string, res chan<- error) {
 		return
 	}
 
-	fh, err := os.OpenFile(path, os.O_RDWR, fs.ModePerm)
+	fh, err := os.OpenFile(path, os.O_RDWR, stdFileMode)
 	if err != nil {
 		res <- err
 		return
