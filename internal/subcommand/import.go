@@ -87,7 +87,7 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 		labels = append(labels, node.Name)
 	}
 
-	path := filepath.Join(rootDir, formatLabels(labels))
+	path := filepath.Join(rootDir, fileFrom(labels))
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, fs.ModePerm)
 	if err != nil {
 		return err

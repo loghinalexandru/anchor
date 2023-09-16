@@ -63,8 +63,8 @@ func (d *delete) handle(args []string, res chan<- error) {
 		return
 	}
 
-	tree := formatLabels(d.labels)
-	path := filepath.Join(rootDir, tree)
+	file := fileFrom(d.labels)
+	path := filepath.Join(rootDir, file)
 
 	if len(args) == 0 {
 		ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)

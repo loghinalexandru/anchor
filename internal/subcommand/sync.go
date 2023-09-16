@@ -44,7 +44,6 @@ func (c *syncCmd) handle(res chan<- error) {
 	}
 
 	err = storage.PushWithSSH(rootDir)
-
 	if err != nil {
 		res <- err
 		return

@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
@@ -65,78 +64,54 @@ func (g *get) handle(args []string, res chan<- error) {
 		return
 	}
 
-	tree := formatLabels(g.labels)
-	paths, err := multiLevelPaths(rootDir, tree)
+	path := fileFrom(g.labels)
 	if err != nil {
 		res <- err
 		return
 	}
 
-	for _, p := range paths {
-		fh, err := os.Open(p)
-		if err != nil {
-			res <- err
-			return
-		}
-
-		content, err := io.ReadAll(fh)
-		if err != nil {
-			res <- err
-			return
-		}
-
-		fh.Close()
-
-		var pattern string
-		if len(args) >= 1 {
-			pattern = args[0]
-		}
-
-		for _, l := range findLines(content, pattern) {
-			title, url, err := bookmark.Parse(string(l))
-			if err != nil {
-				fmt.Print(url)
-				res <- err
-				return
-			}
-
-			if g.openFlag {
-				err = open(url)
-				if err != nil {
-					res <- err
-				}
-
-				return
-			}
-
-			if g.fullFlag {
-				fmt.Fprintln(os.Stdout, title, url)
-			} else {
-				fmt.Fprintln(os.Stdout, title)
-			}
-		}
-	}
-}
-
-func multiLevelPaths(rootDir string, treePath string) ([]string, error) {
-	var paths []string
-
-	dd, err := os.ReadDir(rootDir)
+	fh, err := os.Open(filepath.Join(rootDir, path))
 	if err != nil {
-		return nil, err
+		res <- err
+		return
 	}
 
-	for _, d := range dd {
-		if d.IsDir() {
-			continue
-		}
-
-		if strings.HasPrefix(d.Name(), treePath) {
-			paths = append(paths, filepath.Join(rootDir, d.Name()))
-		}
+	content, err := io.ReadAll(fh)
+	if err != nil {
+		res <- err
+		return
 	}
 
-	return paths, nil
+	fh.Close()
+
+	var pattern string
+	if len(args) >= 1 {
+		pattern = args[0]
+	}
+
+	for _, l := range findLines(content, pattern) {
+		title, url, err := bookmark.Parse(string(l))
+		if err != nil {
+			fmt.Print(url)
+			res <- err
+			return
+		}
+
+		if g.openFlag {
+			err = open(url)
+			if err != nil {
+				res <- err
+			}
+
+			return
+		}
+
+		if g.fullFlag {
+			fmt.Fprintln(os.Stdout, title, url)
+		} else {
+			fmt.Fprintln(os.Stdout, title)
+		}
+	}
 }
 
 func open(url string) error {

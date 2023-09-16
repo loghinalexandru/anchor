@@ -2,6 +2,7 @@ package subcommand
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -13,8 +14,9 @@ import (
 
 // Refactor this
 const (
-	defaultLabel   = "root"
-	defaultDir     = ".anchor"
+	stdLabel       = "root"
+	stdDir         = ".anchor"
+	stdSeparator   = "."
 	regexpNotLabel = `[^a-z0-9-]`
 	regexpLabel    = `^[a-z0-9-]+$`
 	regexpLine     = `(?im)^.+%s.+$`
@@ -43,12 +45,12 @@ func rootDir() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(home, defaultDir), nil
+	return filepath.Join(home, stdDir), nil
 }
 
-func formatLabels(labels []string) string {
+func fileFrom(labels []string) string {
 	if len(labels) == 0 {
-		return defaultLabel
+		return stdLabel
 	}
 
 	exp := regexp.MustCompile(regexpNotLabel)
@@ -56,7 +58,7 @@ func formatLabels(labels []string) string {
 		labels[i] = exp.ReplaceAllString(l, "")
 	}
 
-	tree := strings.Join(labels, ".")
+	tree := strings.Join(labels, stdSeparator)
 	return strings.ToLower(tree)
 }
 
@@ -88,4 +90,22 @@ func confirmation(s string, in io.Reader) bool {
 func findLines(content []byte, pattern string) [][]byte {
 	regex := regexp.MustCompile(fmt.Sprintf(regexpLine, regexp.QuoteMeta(pattern)))
 	return regex.FindAll(content, -1)
+}
+
+func lineCounter(r io.Reader) (int, error) {
+	var res int
+	buf := make([]byte, 32*1024)
+	lineSep := []byte{'\n'}
+
+	for {
+		c, err := r.Read(buf)
+		res += bytes.Count(buf[:c], lineSep)
+
+		switch {
+		case err == io.EOF:
+			return res, nil
+		case err != nil:
+			return res, err
+		}
+	}
 }
