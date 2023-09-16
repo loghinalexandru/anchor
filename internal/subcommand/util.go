@@ -12,7 +12,6 @@ import (
 	"strings"
 )
 
-// Refactor this
 const (
 	stdFileMode    = os.FileMode(0644)
 	stdLabel       = "root"

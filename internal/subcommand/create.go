@@ -74,8 +74,7 @@ func (c *create) handle(ctx context.Context, args []string, res chan<- error) {
 		return
 	}
 
-	tree := fileFrom(c.labels)
-	path := filepath.Join(rootDir, tree)
+	path := filepath.Join(rootDir, fileFrom(c.labels))
 
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, stdFileMode)
 	if err != nil {

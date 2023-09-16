@@ -64,25 +64,20 @@ func (g *get) handle(args []string, res chan<- error) {
 		return
 	}
 
-	path := fileFrom(g.labels)
+	path, err := os.Open(filepath.Join(rootDir, fileFrom(g.labels)))
+
 	if err != nil {
 		res <- err
 		return
 	}
 
-	fh, err := os.Open(filepath.Join(rootDir, path))
+	content, err := io.ReadAll(path)
 	if err != nil {
 		res <- err
 		return
 	}
 
-	content, err := io.ReadAll(fh)
-	if err != nil {
-		res <- err
-		return
-	}
-
-	fh.Close()
+	path.Close()
 
 	var pattern string
 	if len(args) >= 1 {
