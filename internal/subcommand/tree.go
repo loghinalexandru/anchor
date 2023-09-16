@@ -82,25 +82,24 @@ func (c *treeCmd) handle(res chan<- error) {
 			return
 		}
 
-		labels := strings.Split(d.Name(), stdSeparator)
-		for i, l := range labels {
+		labels := []string{""}
+		labels = append(labels, strings.Split(d.Name(), stdSeparator)...)
+		for i, l := range labels[1:] {
 			if len(hierarchy) <= i {
-				hierarchy = append(hierarchy, make(map[string]label))
+				hierarchy = append(hierarchy, map[string]label{})
 			}
 
 			switch i {
-			case 0:
+			case len(labels) - 2:
 				hierarchy[i][l] = label{
-					lineCount: c,
-				}
-			case len(labels) - 1:
-				hierarchy[i][l] = label{
-					parent:    labels[i-1],
+					parent:    labels[i],
 					lineCount: c,
 				}
 			default:
-				hierarchy[i][l] = label{
-					parent: labels[i-1],
+				if _, ok := hierarchy[i][l]; !ok {
+					hierarchy[i][l] = label{
+						parent: labels[i],
+					}
 				}
 			}
 		}
@@ -113,15 +112,15 @@ func (c *treeCmd) handle(res chan<- error) {
 		curr = make(map[string]treeprint.Tree)
 		for k, v := range lvl {
 			if v.parent == "" {
-				br := tree.AddMetaBranch(fmt.Sprintf(msgMetadata, v.lineCount), k)
+				br := tree.AddBranch(k)
 				curr[k] = br
 			} else {
 				br := prev[v.parent]
-				if v.lineCount > 0 {
-					curr[k] = br.AddMetaBranch(fmt.Sprintf(msgMetadata, v.lineCount), k)
-				} else {
-					curr[k] = br.AddBranch(k)
-				}
+				curr[k] = br.AddBranch(k)
+			}
+
+			if v.lineCount > 0 {
+				curr[k].SetMetaValue(fmt.Sprintf(msgMetadata, v.lineCount))
 			}
 		}
 		prev = curr
