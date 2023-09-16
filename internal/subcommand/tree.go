@@ -1,12 +1,9 @@
 package subcommand
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/peterbourgon/ff/v4"
@@ -55,54 +52,62 @@ func (c *treeCmd) handle(res chan<- error) {
 		return
 	}
 
-	tree := treeprint.New()
+	var hierarchy []map[string]string
 	for _, d := range dd {
 		if d.IsDir() {
 			continue
 		}
 
 		labels := strings.Split(d.Name(), ".")
-		br := tree.Branch()
+		for i, l := range labels {
+			if len(hierarchy) <= i {
+				hierarchy = append(hierarchy, make(map[string]string))
+			}
 
-		for _, l := range labels {
-			br = br.AddBranch(l)
+			if i == 0 {
+				hierarchy[i][l] = ""
+			} else {
+				hierarchy[i][l] = labels[i-1]
+			}
 		}
+	}
 
-		fh, err := os.Open(filepath.Join(dir, d.Name()))
-		if err != nil {
-			res <- err
-			return
+	var prev map[string]treeprint.Tree
+	var curr map[string]treeprint.Tree
+	tree := treeprint.NewWithRoot(defaultDir)
+	for _, lvl := range hierarchy {
+		curr = make(map[string]treeprint.Tree)
+		for k, v := range lvl {
+			if v == "" {
+				br := tree.AddBranch(k)
+				curr[k] = br
+			} else {
+				br := prev[v]
+				curr[k] = br.AddBranch(k)
+			}
 		}
-
-		count, err := lineCounter(fh)
-		fh.Close()
-
-		if err != nil {
-			res <- err
-			return
-		}
-
-		br.SetMetaValue(count)
+		prev = curr
 	}
 
 	fmt.Println(tree.String())
 }
 
-func lineCounter(r io.Reader) (int, error) {
-	var res int
+// Add line counter for each label
+// func lineCounter(r io.Reader) (int, error) {
+// 	var res int
 
-	buf := make([]byte, 32*1024)
-	lineSep := []byte{'\n'}
+// 	buf := make([]byte, 32*1024)
+// 	lineSep := []byte{'\n'}
 
-	for {
-		c, err := r.Read(buf)
-		res += bytes.Count(buf[:c], lineSep)
+// 	for {
+// 		c, err := r.Read(buf)
+// 		res += bytes.Count(buf[:c], lineSep)
 
-		switch {
-		case err == io.EOF:
-			return res, nil
-		case err != nil:
-			return res, err
-		}
-	}
-}
+// 		switch {
+// 		case err == io.EOF:
+// 			return res, nil
+// 		case err != nil:
+// 			return res, err
+// 		}
+// 	}
+// }
