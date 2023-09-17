@@ -37,13 +37,13 @@ func RegisterSync(root *ff.Command, rootFlags *ff.FlagSet) {
 func (*syncCmd) handle(res chan<- error) {
 	defer close(res)
 
-	rootDir, err := rootDir()
+	dir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
 	}
 
-	err = storage.PushWithSSH(rootDir)
+	err = storage.PushWithSSH(dir)
 	if err != nil {
 		res <- err
 		return

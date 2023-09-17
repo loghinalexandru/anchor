@@ -48,7 +48,7 @@ func RegisterImport(root *ff.Command, rootFlags *ff.FlagSet) {
 func (*importCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
-	rootDir, err := rootDir()
+	dir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
@@ -72,7 +72,7 @@ func (*importCmd) handle(args []string, res chan<- error) {
 	}
 
 	doc, _ := netscape.Unmarshal(content)
-	err = traversal(rootDir, nil, doc.Root)
+	err = traversal(dir, nil, doc.Root)
 
 	if err != nil {
 		res <- err
@@ -113,8 +113,7 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 	}
 
 	for _, n := range node.Subfolders {
-		err := traversal(rootDir, labels, n)
-
+		err = traversal(rootDir, labels, n)
 		if err != nil {
 			return err
 		}

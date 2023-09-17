@@ -27,7 +27,7 @@ func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd.command = ff.Command{
 		Name:      "init",
 		Usage:     "init",
-		ShortHelp: "initCmd a new empty home for anchor",
+		ShortHelp: "init a new empty home for anchor",
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
 			res := make(chan error, 1)
@@ -48,7 +48,7 @@ func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
 func (init *initCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
-	rootDir, err := rootDir()
+	dir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
@@ -60,7 +60,7 @@ func (init *initCmd) handle(args []string, res chan<- error) {
 			return
 		}
 
-		err := storage.CloneWithSSH(rootDir, args[0])
+		err = storage.CloneWithSSH(dir, args[0])
 		if err != nil {
 			res <- err
 		}
@@ -68,9 +68,8 @@ func (init *initCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	if _, err := os.Stat(rootDir); os.IsNotExist(err) {
-		err = os.Mkdir(rootDir, stdFileMode)
-
+	if _, err = os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, stdFileMode)
 		if err != nil {
 			res <- err
 			return

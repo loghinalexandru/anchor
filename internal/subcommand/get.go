@@ -23,15 +23,15 @@ type getCmd struct {
 func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd := getCmd{}
 
-	flags := ff.NewFlagSet("getCmd").SetParent(rootFlags)
+	flags := ff.NewFlagSet("get").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy for each")
 	_ = flags.BoolVar(&cmd.fullFlag, 'f', "full", "show full bookmark entry")
 	_ = flags.BoolVar(&cmd.openFlag, 'o', "open", "open specified link")
 
 	cmd.command = ff.Command{
-		Name:      "getCmd",
-		Usage:     "getCmd",
-		ShortHelp: "getCmd existing bookmarks",
+		Name:      "get",
+		Usage:     "get",
+		ShortHelp: "get existing bookmarks",
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
 			res := make(chan error, 1)
@@ -52,7 +52,7 @@ func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
 func (get *getCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
-	rootDir, err := rootDir()
+	dir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
@@ -64,7 +64,7 @@ func (get *getCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	path, err := os.Open(filepath.Join(rootDir, fileFrom(get.labels)))
+	path, err := os.Open(filepath.Join(dir, fileFrom(get.labels)))
 
 	if err != nil {
 		res <- err
@@ -77,7 +77,7 @@ func (get *getCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	path.Close()
+	_ = path.Close()
 
 	var pattern string
 	if len(args) >= 1 {
@@ -102,9 +102,9 @@ func (get *getCmd) handle(args []string, res chan<- error) {
 		}
 
 		if get.fullFlag {
-			fmt.Fprintln(os.Stdout, title, url)
+			_, _ = fmt.Fprintln(os.Stdout, title, url)
 		} else {
-			fmt.Fprintln(os.Stdout, title)
+			_, _ = fmt.Fprintln(os.Stdout, title)
 		}
 	}
 }

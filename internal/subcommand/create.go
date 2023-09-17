@@ -19,13 +19,13 @@ type createCmd struct {
 func RegisterCreate(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd := createCmd{}
 
-	flags := ff.NewFlagSet("createCmd").SetParent(rootFlags)
+	flags := ff.NewFlagSet("create").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add labels in order of appearance")
 	_ = flags.StringVar(&cmd.title, 't', "title", "", "add custom title")
 
 	cmd.command = ff.Command{
-		Name:      "createCmd",
-		Usage:     "crate",
+		Name:      "create",
+		Usage:     "create",
 		ShortHelp: "add a bookmark with set labels",
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
@@ -47,7 +47,7 @@ func RegisterCreate(root *ff.Command, rootFlags *ff.FlagSet) {
 func (crt *createCmd) handle(ctx context.Context, args []string, res chan<- error) {
 	defer close(res)
 
-	rootDir, err := rootDir()
+	dir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
@@ -74,7 +74,7 @@ func (crt *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 		return
 	}
 
-	path := filepath.Join(rootDir, fileFrom(crt.labels))
+	path := filepath.Join(dir, fileFrom(crt.labels))
 
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, stdFileMode)
 	if err != nil {

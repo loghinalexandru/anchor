@@ -23,12 +23,12 @@ type deleteCmd struct {
 func RegisterDelete(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd := deleteCmd{}
 
-	flags := ff.NewFlagSet("deleteCmd").SetParent(rootFlags)
+	flags := ff.NewFlagSet("delete").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
 
 	cmd.command = ff.Command{
-		Name:      "deleteCmd",
-		Usage:     "deleteCmd",
+		Name:      "delete",
+		Usage:     "delete",
 		ShortHelp: "remove a bookmark",
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
@@ -50,7 +50,7 @@ func RegisterDelete(root *ff.Command, rootFlags *ff.FlagSet) {
 func (del *deleteCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
-	rootDir, err := rootDir()
+	dir, err := rootDir()
 	if err != nil {
 		res <- err
 		return
@@ -62,7 +62,7 @@ func (del *deleteCmd) handle(args []string, res chan<- error) {
 		return
 	}
 
-	path := filepath.Join(rootDir, fileFrom(del.labels))
+	path := filepath.Join(dir, fileFrom(del.labels))
 
 	if len(args) == 0 {
 		ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
