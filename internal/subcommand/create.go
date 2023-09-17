@@ -75,7 +75,6 @@ func (crt *createCmd) handle(ctx context.Context, args []string, res chan<- erro
 	}
 
 	path := filepath.Join(dir, fileFrom(crt.labels))
-
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, stdFileMode)
 	if err != nil {
 		res <- err

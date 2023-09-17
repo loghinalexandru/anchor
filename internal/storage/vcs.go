@@ -7,8 +7,13 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
+const (
+	stdUser   = "git"
+	msgCommit = "Sync bookmarks"
+)
+
 func CloneWithSSH(path string, remote string) error {
-	auth, err := ssh.NewSSHAgentAuth("git")
+	auth, err := ssh.NewSSHAgentAuth(stdUser)
 	if err != nil {
 		return err
 	}
@@ -30,14 +35,14 @@ func PushWithSSH(path string) error {
 		return err
 	}
 
-	auth, err := ssh.NewSSHAgentAuth("git")
+	auth, err := ssh.NewSSHAgentAuth(stdUser)
 	if err != nil {
 		return err
 	}
 
 	tree, _ := repo.Worktree()
 	err = tree.Pull(&git.PullOptions{
-		RemoteName: "origin",
+		RemoteName: git.DefaultRemoteName,
 		Auth:       auth,
 	})
 
@@ -55,7 +60,7 @@ func PushWithSSH(path string) error {
 		return err
 	}
 
-	_, err = tree.Commit("Sync bookmarks", &git.CommitOptions{})
+	_, err = tree.Commit(msgCommit, &git.CommitOptions{})
 	if err != nil {
 		return err
 	}

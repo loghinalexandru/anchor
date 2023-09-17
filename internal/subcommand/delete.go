@@ -63,7 +63,6 @@ func (del *deleteCmd) handle(args []string, res chan<- error) {
 	}
 
 	path := filepath.Join(dir, fileFrom(del.labels))
-
 	if len(args) == 0 {
 		ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
 		if ok {
