@@ -13,13 +13,13 @@ var (
 	ErrInvalidURL = errors.New("not a valid URL")
 )
 
-type initialize struct {
+type initCmd struct {
 	command  ff.Command
 	repoFlag bool
 }
 
 func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
-	cmd := initialize{}
+	cmd := initCmd{}
 
 	flags := ff.NewFlagSet("init").SetParent(rootFlags)
 	_ = flags.BoolVar(&cmd.repoFlag, 'r', "repository", "used in order to init a git repository")
@@ -27,7 +27,7 @@ func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
 	cmd.command = ff.Command{
 		Name:      "init",
 		Usage:     "init",
-		ShortHelp: "initialize a new empty home for anchor",
+		ShortHelp: "initCmd a new empty home for anchor",
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
 			res := make(chan error, 1)
@@ -45,7 +45,7 @@ func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
 	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (ini *initialize) handle(args []string, res chan<- error) {
+func (init *initCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
 	rootDir, err := rootDir()
@@ -54,7 +54,7 @@ func (ini *initialize) handle(args []string, res chan<- error) {
 		return
 	}
 
-	if ini.repoFlag {
+	if init.repoFlag {
 		if len(args) == 0 {
 			res <- ErrInvalidURL
 			return

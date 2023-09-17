@@ -48,7 +48,7 @@ func RegisterTree(root *ff.Command, rootFlags *ff.FlagSet) {
 	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
 }
 
-func (c *treeCmd) handle(res chan<- error) {
+func (*treeCmd) handle(res chan<- error) {
 	defer close(res)
 
 	dir, err := rootDir()

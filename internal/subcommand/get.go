@@ -13,7 +13,7 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
-type get struct {
+type getCmd struct {
 	command  ff.Command
 	labels   []string
 	fullFlag bool
@@ -21,17 +21,17 @@ type get struct {
 }
 
 func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
-	cmd := get{}
+	cmd := getCmd{}
 
-	flags := ff.NewFlagSet("get").SetParent(rootFlags)
+	flags := ff.NewFlagSet("getCmd").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy for each")
 	_ = flags.BoolVar(&cmd.fullFlag, 'f', "full", "show full bookmark entry")
 	_ = flags.BoolVar(&cmd.openFlag, 'o', "open", "open specified link")
 
 	cmd.command = ff.Command{
-		Name:      "get",
-		Usage:     "get",
-		ShortHelp: "get existing bookmarks",
+		Name:      "getCmd",
+		Usage:     "getCmd",
+		ShortHelp: "getCmd existing bookmarks",
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
 			res := make(chan error, 1)
@@ -49,7 +49,7 @@ func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
 	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (g *get) handle(args []string, res chan<- error) {
+func (get *getCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
 	rootDir, err := rootDir()
@@ -58,13 +58,13 @@ func (g *get) handle(args []string, res chan<- error) {
 		return
 	}
 
-	err = validate(g.labels)
+	err = validate(get.labels)
 	if err != nil {
 		res <- err
 		return
 	}
 
-	path, err := os.Open(filepath.Join(rootDir, fileFrom(g.labels)))
+	path, err := os.Open(filepath.Join(rootDir, fileFrom(get.labels)))
 
 	if err != nil {
 		res <- err
@@ -92,7 +92,7 @@ func (g *get) handle(args []string, res chan<- error) {
 			return
 		}
 
-		if g.openFlag {
+		if get.openFlag {
 			err = open(url)
 			if err != nil {
 				res <- err
@@ -101,7 +101,7 @@ func (g *get) handle(args []string, res chan<- error) {
 			return
 		}
 
-		if g.fullFlag {
+		if get.fullFlag {
 			fmt.Fprintln(os.Stdout, title, url)
 		} else {
 			fmt.Fprintln(os.Stdout, title)

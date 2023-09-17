@@ -10,21 +10,21 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
-type create struct {
+type createCmd struct {
 	command ff.Command
 	labels  []string
 	title   string
 }
 
 func RegisterCreate(root *ff.Command, rootFlags *ff.FlagSet) {
-	cmd := create{}
+	cmd := createCmd{}
 
-	flags := ff.NewFlagSet("create").SetParent(rootFlags)
+	flags := ff.NewFlagSet("createCmd").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add labels in order of appearance")
 	_ = flags.StringVar(&cmd.title, 't', "title", "", "add custom title")
 
 	cmd.command = ff.Command{
-		Name:      "create",
+		Name:      "createCmd",
 		Usage:     "crate",
 		ShortHelp: "add a bookmark with set labels",
 		Flags:     flags,
@@ -44,7 +44,7 @@ func RegisterCreate(root *ff.Command, rootFlags *ff.FlagSet) {
 	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (c *create) handle(ctx context.Context, args []string, res chan<- error) {
+func (crt *createCmd) handle(ctx context.Context, args []string, res chan<- error) {
 	defer close(res)
 
 	rootDir, err := rootDir()
@@ -53,13 +53,13 @@ func (c *create) handle(ctx context.Context, args []string, res chan<- error) {
 		return
 	}
 
-	b, err := bookmark.New(c.title, args[0])
+	b, err := bookmark.New(crt.title, args[0])
 	if err != nil {
 		res <- err
 		return
 	}
 
-	if c.title == "" {
+	if crt.title == "" {
 		err = b.TitleFromURL(ctx)
 
 		if err != nil {
@@ -68,13 +68,13 @@ func (c *create) handle(ctx context.Context, args []string, res chan<- error) {
 		}
 	}
 
-	err = validate(c.labels)
+	err = validate(crt.labels)
 	if err != nil {
 		res <- err
 		return
 	}
 
-	path := filepath.Join(rootDir, fileFrom(c.labels))
+	path := filepath.Join(rootDir, fileFrom(crt.labels))
 
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, stdFileMode)
 	if err != nil {

@@ -45,7 +45,7 @@ func RegisterImport(root *ff.Command, rootFlags *ff.FlagSet) {
 	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
 }
 
-func (c *importCmd) handle(args []string, res chan<- error) {
+func (*importCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
 	rootDir, err := rootDir()

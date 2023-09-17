@@ -34,7 +34,7 @@ func RegisterSync(root *ff.Command, rootFlags *ff.FlagSet) {
 	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
 }
 
-func (c *syncCmd) handle(res chan<- error) {
+func (*syncCmd) handle(res chan<- error) {
 	defer close(res)
 
 	rootDir, err := rootDir()

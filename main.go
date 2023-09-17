@@ -32,10 +32,10 @@ func main() {
 	err := rootCmd.ParseAndRun(ctx, os.Args[1:])
 
 	if errors.Is(err, ff.ErrHelp) || errors.Is(err, ff.ErrNoExec) {
-		fmt.Fprint(os.Stdout, ffhelp.Command(rootCmd))
+		_, _ = fmt.Fprint(os.Stdout, ffhelp.Command(rootCmd))
 		os.Exit(0)
 	} else if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }

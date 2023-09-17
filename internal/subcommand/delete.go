@@ -12,23 +12,23 @@ import (
 )
 
 const (
-	msgDeleteConfirmation = "You are about to delete %s. Proceed?"
+	msgDeleteConfirmation = "You are about to deleteCmd %s. Proceed?"
 )
 
-type delete struct {
+type deleteCmd struct {
 	command ff.Command
 	labels  []string
 }
 
 func RegisterDelete(root *ff.Command, rootFlags *ff.FlagSet) {
-	cmd := delete{}
+	cmd := deleteCmd{}
 
-	flags := ff.NewFlagSet("delete").SetParent(rootFlags)
+	flags := ff.NewFlagSet("deleteCmd").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
 
 	cmd.command = ff.Command{
-		Name:      "delete",
-		Usage:     "delete",
+		Name:      "deleteCmd",
+		Usage:     "deleteCmd",
 		ShortHelp: "remove a bookmark",
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
@@ -47,7 +47,7 @@ func RegisterDelete(root *ff.Command, rootFlags *ff.FlagSet) {
 	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (d *delete) handle(args []string, res chan<- error) {
+func (del *deleteCmd) handle(args []string, res chan<- error) {
 	defer close(res)
 
 	rootDir, err := rootDir()
@@ -56,13 +56,13 @@ func (d *delete) handle(args []string, res chan<- error) {
 		return
 	}
 
-	err = validate(d.labels)
+	err = validate(del.labels)
 	if err != nil {
 		res <- err
 		return
 	}
 
-	path := filepath.Join(rootDir, fileFrom(d.labels))
+	path := filepath.Join(rootDir, fileFrom(del.labels))
 
 	if len(args) == 0 {
 		ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
@@ -79,11 +79,13 @@ func (d *delete) handle(args []string, res chan<- error) {
 		return
 	}
 
-	defer fh.Close()
+	defer func() {
+		res <- fh.Close()
+	}()
 
 	content, _ := io.ReadAll(fh)
 	ll := findLines(content, args[0])
-	ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(ll))), os.Stdin)
+	ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%del line(s)", len(ll))), os.Stdin)
 
 	if !ok {
 		return

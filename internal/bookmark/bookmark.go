@@ -23,7 +23,7 @@ type Bookmark struct {
 }
 
 func New(title string, rawURL string) (*Bookmark, error) {
-	url, err := url.ParseRequestURI(rawURL)
+	uri, err := url.ParseRequestURI(rawURL)
 	if err != nil {
 		return nil, err
 	}
@@ -31,17 +31,8 @@ func New(title string, rawURL string) (*Bookmark, error) {
 	rep := strings.NewReplacer("\"", "", "\n", "", "\r", "")
 	return &Bookmark{
 		title: rep.Replace(title),
-		url:   url,
+		url:   uri,
 	}, nil
-}
-
-func NewFromLine(line string) (*Bookmark, error) {
-	title, url, err := Parse(line)
-	if err != nil {
-		return nil, err
-	}
-
-	return New(title, url)
 }
 
 func (b *Bookmark) String() string {
@@ -64,7 +55,10 @@ func (b *Bookmark) TitleFromURL(ctx context.Context) error {
 		return err
 	}
 
-	res.Body.Close()
+	err = res.Body.Close()
+	if err != nil {
+		return err
+	}
 
 	title := findTitle(page)
 	if title == "" {
