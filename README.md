@@ -3,7 +3,9 @@
     <source media="(prefers-color-scheme: dark)" srcset="images/banner_dark.png">
     <img src="images/banner_light.png" width="30%">
   </picture>
-  <h1>Anchor</h1>
+  <picture>
+    <img src="images/title.png" width="40%">
+  </picture>
 </div>
 
 # Known Limitations
