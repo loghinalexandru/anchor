@@ -6,7 +6,8 @@
 </div>
 <div align="center">
   <picture>
-    <img src="images/title.png" width="60%">
+    <source media="(prefers-color-scheme: dark)" srcset="images/title_dark.png">
+    <img src="images/title_light.png" width="60%">
   </picture>
 </div>
 
