@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/banner_dark.png">
-    <img src="images/banner_light.png" width="65%">
+    <img src="images/banner_light.png" width="25%">
   </picture>
 </p>
 
