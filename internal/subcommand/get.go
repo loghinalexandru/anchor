@@ -33,52 +33,36 @@ func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
 		Usage:     "get",
 		ShortHelp: "get existing bookmarks",
 		Flags:     flags,
-		Exec: func(ctx context.Context, args []string) error {
-			res := make(chan error, 1)
-			go cmd.handle(args, res)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-res:
-				return err
-			}
-		},
+		Exec:      handlerMiddleware(cmd.handle),
 	}
 
 	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (get *getCmd) handle(args []string, res chan<- error) {
-	defer close(res)
+func (get *getCmd) handle(_ context.Context, args []string) error {
 
 	dir, err := rootDir()
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	err = validate(get.labels)
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	path, err := os.Open(filepath.Join(dir, fileFrom(get.labels)))
 
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	content, err := io.ReadAll(path)
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	_ = path.Close()
-
 	var pattern string
 	if len(args) >= 1 {
 		pattern = args[0]
@@ -88,17 +72,16 @@ func (get *getCmd) handle(args []string, res chan<- error) {
 		title, url, err := bookmark.Parse(string(l))
 		if err != nil {
 			fmt.Print(url)
-			res <- err
-			return
+			return err
 		}
 
 		if get.openFlag {
 			err = open(url)
 			if err != nil {
-				res <- err
+				return err
 			}
 
-			return
+			return nil
 		}
 
 		if get.fullFlag {
@@ -107,6 +90,8 @@ func (get *getCmd) handle(args []string, res chan<- error) {
 			_, _ = fmt.Fprintln(os.Stdout, title)
 		}
 	}
+
+	return nil
 }
 
 func open(url string) error {

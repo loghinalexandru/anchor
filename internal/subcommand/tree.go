@@ -32,35 +32,22 @@ func RegisterTree(root *ff.Command, rootFlags *ff.FlagSet) {
 		Usage:     "tree",
 		ShortHelp: "list available labels in a tree structure",
 		Flags:     flags,
-		Exec: func(ctx context.Context, args []string) error {
-			res := make(chan error, 1)
-			go cmd.handle(res)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-res:
-				return err
-			}
-		},
+		Exec:      handlerMiddleware(cmd.handle),
 	}
 
 	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
 }
 
-func (*treeCmd) handle(res chan<- error) {
-	defer close(res)
+func (*treeCmd) handle(context.Context, []string) error {
 
 	dir, err := rootDir()
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	dd, err := os.ReadDir(dir)
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	var hierarchy []map[string]label
@@ -71,15 +58,13 @@ func (*treeCmd) handle(res chan<- error) {
 
 		fh, err := os.Open(filepath.Join(dir, d.Name()))
 		if err != nil {
-			res <- err
-			return
+			return err
 		}
 
 		c, err := lineCounter(fh)
 		err = errors.Join(err, fh.Close())
 		if err != nil {
-			res <- err
-			return
+			return err
 		}
 
 		labels := []string{""}
@@ -127,4 +112,5 @@ func (*treeCmd) handle(res chan<- error) {
 	}
 
 	fmt.Print(tree.String())
+	return nil
 }

@@ -18,34 +18,22 @@ func RegisterSync(root *ff.Command, rootFlags *ff.FlagSet) {
 		Usage:     "sync",
 		ShortHelp: "sync changes with configured remote",
 		Flags:     flags,
-		Exec: func(ctx context.Context, args []string) error {
-			res := make(chan error, 1)
-			go cmd.handle(res)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-res:
-				return err
-			}
-		},
+		Exec:      handlerMiddleware(cmd.handle),
 	}
 
 	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
 }
 
-func (*syncCmd) handle(res chan<- error) {
-	defer close(res)
-
+func (*syncCmd) handle(context.Context, []string) error {
 	dir, err := rootDir()
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	err = storage.PushWithSSH(dir)
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
+
+	return nil
 }

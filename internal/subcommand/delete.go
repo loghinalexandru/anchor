@@ -3,6 +3,7 @@ package subcommand
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -31,35 +32,22 @@ func RegisterDelete(root *ff.Command, rootFlags *ff.FlagSet) {
 		Usage:     "delete",
 		ShortHelp: "remove a bookmark",
 		Flags:     flags,
-		Exec: func(ctx context.Context, args []string) error {
-			res := make(chan error, 1)
-			go cmd.handle(args, res)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-res:
-				return err
-			}
-		},
+		Exec:      handlerMiddleware(cmd.handle),
 	}
 
 	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (del *deleteCmd) handle(args []string, res chan<- error) {
-	defer close(res)
+func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 
 	dir, err := rootDir()
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	err = validate(del.labels)
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	path := filepath.Join(dir, fileFrom(del.labels))
@@ -67,19 +55,18 @@ func (del *deleteCmd) handle(args []string, res chan<- error) {
 		ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
 		if ok {
 			err = os.Remove(path)
-			res <- err
+			return err
 		}
-		return
+		return nil
 	}
 
 	fh, err := os.OpenFile(path, os.O_RDWR, stdFileMode)
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	defer func() {
-		res <- fh.Close()
+		err = errors.Join(err, fh.Close())
 	}()
 
 	content, _ := io.ReadAll(fh)
@@ -101,7 +88,8 @@ func (del *deleteCmd) handle(args []string, res chan<- error) {
 	_, err = fh.Write(content)
 
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
+
+	return nil
 }

@@ -29,50 +29,37 @@ func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
 		Usage:     "init",
 		ShortHelp: "init a new empty home for anchor",
 		Flags:     flags,
-		Exec: func(ctx context.Context, args []string) error {
-			res := make(chan error, 1)
-			go cmd.handle(args, res)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-res:
-				return err
-			}
-		},
+		Exec:      handlerMiddleware(cmd.handle),
 	}
 
 	root.Subcommands = append(root.Subcommands, &cmd.command)
 }
 
-func (init *initCmd) handle(args []string, res chan<- error) {
-	defer close(res)
-
+func (init *initCmd) handle(_ context.Context, args []string) error {
 	dir, err := rootDir()
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	if init.repoFlag {
 		if len(args) == 0 {
-			res <- ErrInvalidURL
-			return
+			return err
 		}
 
 		err = storage.CloneWithSSH(dir, args[0])
 		if err != nil {
-			res <- err
+			return err
 		}
 
-		return
+		return nil
 	}
 
 	if _, err = os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, stdFileMode)
 		if err != nil {
-			res <- err
-			return
+			return err
 		}
 	}
+
+	return nil
 }

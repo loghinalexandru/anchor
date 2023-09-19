@@ -29,54 +29,41 @@ func RegisterImport(root *ff.Command, rootFlags *ff.FlagSet) {
 		Usage:     "import",
 		ShortHelp: "import bookmarks from a file",
 		Flags:     flags,
-		Exec: func(ctx context.Context, args []string) error {
-			res := make(chan error, 1)
-			go cmd.handle(args, res)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-res:
-				return err
-			}
-		},
+		Exec:      handlerMiddleware(cmd.handle),
 	}
 
 	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
 }
 
-func (*importCmd) handle(args []string, res chan<- error) {
-	defer close(res)
+func (*importCmd) handle(_ context.Context, args []string) error {
 
 	dir, err := rootDir()
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	if len(args) == 0 {
-		res <- ErrInvalidImportFile
-		return
+		return err
 	}
 
 	fh, err := os.Open(args[0])
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	content, err := io.ReadAll(fh)
 	if err != nil {
-		res <- err
-		return
+		return err
 	}
 
 	doc, _ := netscape.Unmarshal(content)
 	err = traversal(dir, nil, doc.Root)
 
 	if err != nil {
-		res <- err
+		return err
 	}
+
+	return nil
 }
 
 func traversal(rootDir string, labels []string, node netscape.Folder) error {

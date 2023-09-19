@@ -11,6 +11,8 @@ import (
 	"github.com/peterbourgon/ff/v4/ffhelp"
 )
 
+type handlerFunc func(ctx context.Context, args []string) error
+
 func Execute(args []string) error {
 	rootFlags := ff.NewFlagSet("anchor")
 	rootCmd := &ff.Command{
@@ -36,4 +38,22 @@ func Execute(args []string) error {
 	}
 
 	return err
+}
+
+func handlerMiddleware(next handlerFunc) handlerFunc {
+	return func(ctx context.Context, args []string) error {
+		res := make(chan error, 1)
+
+		go func(res chan<- error) {
+			res <- next(ctx, args)
+			close(res)
+		}(res)
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err := <-res:
+			return err
+		}
+	}
 }
