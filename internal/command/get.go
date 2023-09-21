@@ -1,4 +1,4 @@
-package types
+package command
 
 import (
 	"context"
@@ -9,9 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/loghinalexandru/anchor/internal/command"
-
 	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -43,17 +42,17 @@ func NewGet(rootFlags *ff.FlagSet) *getCmd {
 
 func (get *getCmd) handle(_ context.Context, args []string) error {
 
-	dir, err := command.RootDir()
+	dir, err := config.RootDir()
 	if err != nil {
 		return err
 	}
 
-	err = command.Validate(get.labels)
+	err = Validate(get.labels)
 	if err != nil {
 		return err
 	}
 
-	path, err := os.Open(filepath.Join(dir, command.FileFrom(get.labels)))
+	path, err := os.Open(filepath.Join(dir, FileFrom(get.labels)))
 
 	if err != nil {
 		return err
@@ -70,7 +69,7 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 		pattern = args[0]
 	}
 
-	for _, l := range command.FindLines(content, pattern) {
+	for _, l := range FindLines(content, pattern) {
 		title, url, err := bookmark.Parse(string(l))
 		if err != nil {
 			fmt.Print(url)

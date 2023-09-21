@@ -1,4 +1,4 @@
-package types
+package command
 
 import (
 	"bytes"
@@ -9,10 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	config "github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
-
-	"github.com/loghinalexandru/anchor/internal/command"
-
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -44,17 +42,17 @@ func NewDelete(rootFlags *ff.FlagSet) *deleteCmd {
 
 func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 
-	dir, err := command.RootDir()
+	dir, err := config.RootDir()
 	if err != nil {
 		return err
 	}
 
-	err = command.Validate(del.labels)
+	err = Validate(del.labels)
 	if err != nil {
 		return err
 	}
 
-	path := filepath.Join(dir, command.FileFrom(del.labels))
+	path := filepath.Join(dir, FileFrom(del.labels))
 	if len(args) == 0 {
 		ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
 		if ok {
@@ -64,7 +62,7 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 		return nil
 	}
 
-	fh, err := os.OpenFile(path, os.O_RDWR, command.StdFileMode)
+	fh, err := os.OpenFile(path, os.O_RDWR, config.StdFileMode)
 	if err != nil {
 		return err
 	}
@@ -74,7 +72,7 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 	}()
 
 	content, _ := io.ReadAll(fh)
-	ll := command.FindLines(content, args[0])
+	ll := FindLines(content, args[0])
 	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(ll))), os.Stdin)
 
 	if !ok {

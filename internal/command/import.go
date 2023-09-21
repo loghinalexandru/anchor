@@ -1,4 +1,4 @@
-package types
+package command
 
 import (
 	"context"
@@ -9,9 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/loghinalexandru/anchor/internal/command"
-
 	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/peterbourgon/ff/v4"
 	"github.com/virtualtam/netscape-go/v2"
 )
@@ -39,7 +38,7 @@ func NewImport(rootFlags *ff.FlagSet) *importCmd {
 
 func (*importCmd) handle(_ context.Context, args []string) error {
 
-	dir, err := command.RootDir()
+	dir, err := config.RootDir()
 	if err != nil {
 		return err
 	}
@@ -75,7 +74,7 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 		labels = append(labels, node.Name)
 	}
 
-	file, err := os.OpenFile(filepath.Join(rootDir, command.FileFrom(labels)), os.O_APPEND|os.O_CREATE|os.O_RDWR, command.StdFileMode)
+	file, err := os.OpenFile(filepath.Join(rootDir, FileFrom(labels)), os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
 	if err != nil {
 		return err
 	}

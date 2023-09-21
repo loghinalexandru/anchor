@@ -1,9 +1,9 @@
-package types
+package command
 
 import (
 	"context"
-	"github.com/loghinalexandru/anchor/internal/command"
 
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -26,7 +26,7 @@ func NewSync(rootFlags *ff.FlagSet) *syncCmd {
 }
 
 func (*syncCmd) handle(context.Context, []string) error {
-	dir, err := command.RootDir()
+	dir, err := config.RootDir()
 	if err != nil {
 		return err
 	}

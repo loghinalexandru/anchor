@@ -1,19 +1,12 @@
-package types
+package command
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"os"
-	"os/signal"
 
 	"github.com/peterbourgon/ff/v4"
-	"github.com/peterbourgon/ff/v4/ffhelp"
 )
 
-type handlerFunc func(ctx context.Context, args []string) error
-
-func Execute(args []string) error {
+func NewExec() *ff.Command {
 	rootFlags := ff.NewFlagSet("anchor")
 	rootCmd := &ff.Command{
 		Name:  "anchor",
@@ -29,16 +22,10 @@ func Execute(args []string) error {
 	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(NewImport(rootFlags)))
 	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(NewTree(rootFlags)))
 
-	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
-	err := rootCmd.ParseAndRun(ctx, args)
-
-	if errors.Is(err, ff.ErrHelp) || errors.Is(err, ff.ErrNoExec) {
-		_, _ = fmt.Fprint(os.Stdout, ffhelp.Command(rootCmd))
-		return nil
-	}
-
-	return err
+	return rootCmd
 }
+
+type handlerFunc func(ctx context.Context, args []string) error
 
 func handlerMiddleware(next handlerFunc) handlerFunc {
 	return func(ctx context.Context, args []string) error {

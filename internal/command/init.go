@@ -1,12 +1,11 @@
-package types
+package command
 
 import (
 	"context"
 	"errors"
 	"os"
 
-	"github.com/loghinalexandru/anchor/internal/command"
-
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -38,7 +37,7 @@ func NewInit(rootFlags *ff.FlagSet) *initCmd {
 }
 
 func (init *initCmd) handle(_ context.Context, args []string) error {
-	dir, err := command.RootDir()
+	dir, err := config.RootDir()
 	if err != nil {
 		return err
 	}
@@ -57,7 +56,7 @@ func (init *initCmd) handle(_ context.Context, args []string) error {
 	}
 
 	if _, err = os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, command.StdFileMode)
+		err = os.Mkdir(dir, config.StdFileMode)
 		if err != nil {
 			return err
 		}

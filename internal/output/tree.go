@@ -3,12 +3,12 @@ package output
 import (
 	"bytes"
 	"fmt"
-	"github.com/loghinalexandru/anchor/internal/command"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/xlab/treeprint"
 )
 
@@ -31,12 +31,12 @@ func Tree(basePath string, dd []os.DirEntry) string {
 		var counter int
 		fh, err := os.Open(filepath.Join(basePath, d.Name()))
 		if err == nil {
-			counter, err = lineCounter(fh)
+			counter, _ = lineCounter(fh)
 			_ = fh.Close()
 		}
 
 		labels := []string{""}
-		labels = append(labels, strings.Split(d.Name(), command.StdSeparator)...)
+		labels = append(labels, strings.Split(d.Name(), config.StdSeparator)...)
 		for i, l := range labels[1:] {
 			if len(hierarchy) <= i {
 				hierarchy = append(hierarchy, map[string]label{})
@@ -64,7 +64,7 @@ func Tree(basePath string, dd []os.DirEntry) string {
 func treePrint(hierarchy []map[string]label) string {
 	var prev map[string]treeprint.Tree
 	var curr map[string]treeprint.Tree
-	tree := treeprint.NewWithRoot(command.StdDir)
+	tree := treeprint.NewWithRoot(config.StdDir)
 	for _, lvl := range hierarchy {
 		curr = make(map[string]treeprint.Tree)
 		for k, v := range lvl {

@@ -3,20 +3,10 @@ package command
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
-)
 
-const (
-	StdFileMode    = os.FileMode(0644)
-	StdLabel       = "root"
-	StdDir         = ".anchor"
-	StdSeparator   = "."
-	regexpNotLabel = `[^a-z0-9-]`
-	regexpLabel    = `^[a-z0-9-]+$`
-	regexpLine     = `(?im)^.+%s.+$`
+	"github.com/loghinalexandru/anchor/internal/config"
 )
 
 var (
@@ -24,7 +14,7 @@ var (
 )
 
 func Validate(labels []string) error {
-	exp := regexp.MustCompile(regexpLabel)
+	exp := regexp.MustCompile(config.RegexpLabel)
 	for _, l := range labels {
 		if !exp.MatchString(l) {
 			return fmt.Errorf("%s: %w", l, ErrInvalidLabel)
@@ -34,31 +24,21 @@ func Validate(labels []string) error {
 	return nil
 }
 
-func RootDir() (string, error) {
-	home, err := os.UserHomeDir()
-
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(home, StdDir), nil
-}
-
 func FileFrom(labels []string) string {
 	if len(labels) == 0 {
-		return StdLabel
+		return config.StdLabel
 	}
 
-	exp := regexp.MustCompile(regexpNotLabel)
+	exp := regexp.MustCompile(config.RegexpNotLabel)
 	for i, l := range labels {
 		labels[i] = exp.ReplaceAllString(l, "")
 	}
 
-	tree := strings.Join(labels, StdSeparator)
+	tree := strings.Join(labels, config.StdSeparator)
 	return strings.ToLower(tree)
 }
 
 func FindLines(content []byte, pattern string) [][]byte {
-	regex := regexp.MustCompile(fmt.Sprintf(regexpLine, regexp.QuoteMeta(pattern)))
+	regex := regexp.MustCompile(fmt.Sprintf(config.RegexpLine, regexp.QuoteMeta(pattern)))
 	return regex.FindAll(content, -1)
 }

@@ -1,4 +1,4 @@
-package types
+package command
 
 import (
 	"context"
@@ -6,9 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/loghinalexandru/anchor/internal/command"
-
 	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -37,7 +36,7 @@ func NewCreate(rootFlags *ff.FlagSet) *createCmd {
 }
 
 func (crt *createCmd) handle(ctx context.Context, args []string) error {
-	dir, err := command.RootDir()
+	dir, err := config.RootDir()
 	if err != nil {
 		return err
 	}
@@ -55,13 +54,13 @@ func (crt *createCmd) handle(ctx context.Context, args []string) error {
 		}
 	}
 
-	err = command.Validate(crt.labels)
+	err = Validate(crt.labels)
 	if err != nil {
 		return err
 	}
 
-	path := filepath.Join(dir, command.FileFrom(crt.labels))
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, command.StdFileMode)
+	path := filepath.Join(dir, FileFrom(crt.labels))
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
 	if err != nil {
 		return err
 	}

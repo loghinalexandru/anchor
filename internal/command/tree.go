@@ -1,11 +1,11 @@
-package types
+package command
 
 import (
 	"context"
 	"fmt"
 	"os"
 
-	"github.com/loghinalexandru/anchor/internal/command"
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -29,7 +29,7 @@ func NewTree(rootFlags *ff.FlagSet) *treeCmd {
 
 func (*treeCmd) handle(context.Context, []string) error {
 
-	dir, err := command.RootDir()
+	dir, err := config.RootDir()
 	if err != nil {
 		return err
 	}
