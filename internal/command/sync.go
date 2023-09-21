@@ -10,7 +10,7 @@ import (
 
 type syncCmd ff.Command
 
-func NewSync(rootFlags *ff.FlagSet) *syncCmd {
+func newSync(rootFlags *ff.FlagSet) *syncCmd {
 	var cmd *syncCmd
 	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
 

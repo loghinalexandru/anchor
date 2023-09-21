@@ -12,7 +12,7 @@ import (
 
 type treeCmd ff.Command
 
-func NewTree(rootFlags *ff.FlagSet) *treeCmd {
+func newTree(rootFlags *ff.FlagSet) *treeCmd {
 	var cmd *treeCmd
 
 	flags := ff.NewFlagSet("tree").SetParent(rootFlags)

@@ -12,7 +12,7 @@ import (
 )
 
 func Execute(args []string) error {
-	rootCmd := NewExec()
+	rootCmd := newExec()
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	err := rootCmd.ParseAndRun(ctx, args)

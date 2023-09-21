@@ -19,17 +19,17 @@ const (
 )
 
 type deleteCmd struct {
-	Command ff.Command
+	command ff.Command
 	labels  []string
 }
 
-func NewDelete(rootFlags *ff.FlagSet) *deleteCmd {
+func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 	cmd := deleteCmd{}
 
 	flags := ff.NewFlagSet("delete").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
 
-	cmd.Command = ff.Command{
+	cmd.command = ff.Command{
 		Name:      "delete",
 		Usage:     "delete",
 		ShortHelp: "remove a bookmark",

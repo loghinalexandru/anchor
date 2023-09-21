@@ -12,19 +12,19 @@ import (
 )
 
 type createCmd struct {
-	Command ff.Command
+	command ff.Command
 	labels  []string
 	title   string
 }
 
-func NewCreate(rootFlags *ff.FlagSet) *createCmd {
+func newCreate(rootFlags *ff.FlagSet) *createCmd {
 	cmd := createCmd{}
 
 	flags := ff.NewFlagSet("create").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add labels in order of appearance")
 	_ = flags.StringVar(&cmd.title, 't', "title", "", "add custom title")
 
-	cmd.Command = ff.Command{
+	cmd.command = ff.Command{
 		Name:      "create",
 		Usage:     "create",
 		ShortHelp: "add a bookmark with set labels",

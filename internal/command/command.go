@@ -6,7 +6,7 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
-func NewExec() *ff.Command {
+func newExec() *ff.Command {
 	rootFlags := ff.NewFlagSet("anchor")
 	rootCmd := &ff.Command{
 		Name:  "anchor",
@@ -14,13 +14,13 @@ func NewExec() *ff.Command {
 		Flags: rootFlags,
 	}
 
-	rootCmd.Subcommands = append(rootCmd.Subcommands, &NewCreate(rootFlags).Command)
-	rootCmd.Subcommands = append(rootCmd.Subcommands, &NewInit(rootFlags).Command)
-	rootCmd.Subcommands = append(rootCmd.Subcommands, &NewGet(rootFlags).Command)
-	rootCmd.Subcommands = append(rootCmd.Subcommands, &NewDelete(rootFlags).Command)
-	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(NewSync(rootFlags)))
-	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(NewImport(rootFlags)))
-	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(NewTree(rootFlags)))
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &newCreate(rootFlags).command)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &newInit(rootFlags).command)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &newGet(rootFlags).command)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &newDelete(rootFlags).command)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newSync(rootFlags)))
+	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newImport(rootFlags)))
+	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newTree(rootFlags)))
 
 	return rootCmd
 }

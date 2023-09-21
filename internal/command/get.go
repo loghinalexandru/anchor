@@ -15,13 +15,13 @@ import (
 )
 
 type getCmd struct {
-	Command  ff.Command
+	command  ff.Command
 	labels   []string
 	fullFlag bool
 	openFlag bool
 }
 
-func NewGet(rootFlags *ff.FlagSet) *getCmd {
+func newGet(rootFlags *ff.FlagSet) *getCmd {
 	cmd := getCmd{}
 
 	flags := ff.NewFlagSet("get").SetParent(rootFlags)
@@ -29,7 +29,7 @@ func NewGet(rootFlags *ff.FlagSet) *getCmd {
 	_ = flags.BoolVar(&cmd.fullFlag, 'f', "full", "show full bookmark entry")
 	_ = flags.BoolVar(&cmd.openFlag, 'o', "open", "open specified link")
 
-	cmd.Command = ff.Command{
+	cmd.command = ff.Command{
 		Name:      "get",
 		Usage:     "get",
 		ShortHelp: "get existing bookmarks",

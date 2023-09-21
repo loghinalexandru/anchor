@@ -21,7 +21,7 @@ var (
 
 type importCmd ff.Command
 
-func NewImport(rootFlags *ff.FlagSet) *importCmd {
+func newImport(rootFlags *ff.FlagSet) *importCmd {
 	var cmd importCmd
 
 	flags := ff.NewFlagSet("import").SetParent(rootFlags)
