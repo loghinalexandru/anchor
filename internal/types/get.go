@@ -1,4 +1,4 @@
-package subcommand
+package types
 
 import (
 	"context"
@@ -9,18 +9,20 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/loghinalexandru/anchor/internal/command"
+
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
 )
 
 type getCmd struct {
-	command  ff.Command
+	Command  ff.Command
 	labels   []string
 	fullFlag bool
 	openFlag bool
 }
 
-func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
+func NewGet(rootFlags *ff.FlagSet) *getCmd {
 	cmd := getCmd{}
 
 	flags := ff.NewFlagSet("get").SetParent(rootFlags)
@@ -28,7 +30,7 @@ func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
 	_ = flags.BoolVar(&cmd.fullFlag, 'f', "full", "show full bookmark entry")
 	_ = flags.BoolVar(&cmd.openFlag, 'o', "open", "open specified link")
 
-	cmd.command = ff.Command{
+	cmd.Command = ff.Command{
 		Name:      "get",
 		Usage:     "get",
 		ShortHelp: "get existing bookmarks",
@@ -36,22 +38,22 @@ func RegisterGet(root *ff.Command, rootFlags *ff.FlagSet) {
 		Exec:      handlerMiddleware(cmd.handle),
 	}
 
-	root.Subcommands = append(root.Subcommands, &cmd.command)
+	return &cmd
 }
 
 func (get *getCmd) handle(_ context.Context, args []string) error {
 
-	dir, err := rootDir()
+	dir, err := command.RootDir()
 	if err != nil {
 		return err
 	}
 
-	err = validate(get.labels)
+	err = command.Validate(get.labels)
 	if err != nil {
 		return err
 	}
 
-	path, err := os.Open(filepath.Join(dir, fileFrom(get.labels)))
+	path, err := os.Open(filepath.Join(dir, command.FileFrom(get.labels)))
 
 	if err != nil {
 		return err
@@ -68,7 +70,7 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 		pattern = args[0]
 	}
 
-	for _, l := range findLines(content, pattern) {
+	for _, l := range command.FindLines(content, pattern) {
 		title, url, err := bookmark.Parse(string(l))
 		if err != nil {
 			fmt.Print(url)

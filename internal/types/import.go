@@ -1,4 +1,4 @@
-package subcommand
+package types
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/loghinalexandru/anchor/internal/command"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/peterbourgon/ff/v4"
@@ -20,11 +22,11 @@ var (
 
 type importCmd ff.Command
 
-func RegisterImport(root *ff.Command, rootFlags *ff.FlagSet) {
-	var cmd *importCmd
+func NewImport(rootFlags *ff.FlagSet) *importCmd {
+	var cmd importCmd
 
 	flags := ff.NewFlagSet("import").SetParent(rootFlags)
-	cmd = &importCmd{
+	cmd = importCmd{
 		Name:      "import",
 		Usage:     "import",
 		ShortHelp: "import bookmarks from a file",
@@ -32,12 +34,12 @@ func RegisterImport(root *ff.Command, rootFlags *ff.FlagSet) {
 		Exec:      handlerMiddleware(cmd.handle),
 	}
 
-	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
+	return &cmd
 }
 
 func (*importCmd) handle(_ context.Context, args []string) error {
 
-	dir, err := rootDir()
+	dir, err := command.RootDir()
 	if err != nil {
 		return err
 	}
@@ -73,7 +75,7 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 		labels = append(labels, node.Name)
 	}
 
-	file, err := os.OpenFile(filepath.Join(rootDir, fileFrom(labels)), os.O_APPEND|os.O_CREATE|os.O_RDWR, stdFileMode)
+	file, err := os.OpenFile(filepath.Join(rootDir, command.FileFrom(labels)), os.O_APPEND|os.O_CREATE|os.O_RDWR, command.StdFileMode)
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package subcommand
+package types
 
 import (
 	"bytes"
@@ -9,25 +9,29 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/loghinalexandru/anchor/internal/output"
+
+	"github.com/loghinalexandru/anchor/internal/command"
+
 	"github.com/peterbourgon/ff/v4"
 )
 
 const (
-	msgDeleteConfirmation = "You are about to deleteCmd %s. Proceed?"
+	msgDeleteConfirmation = "You are about to delete %s. Proceed?"
 )
 
 type deleteCmd struct {
-	command ff.Command
+	Command ff.Command
 	labels  []string
 }
 
-func RegisterDelete(root *ff.Command, rootFlags *ff.FlagSet) {
+func NewDelete(rootFlags *ff.FlagSet) *deleteCmd {
 	cmd := deleteCmd{}
 
 	flags := ff.NewFlagSet("delete").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
 
-	cmd.command = ff.Command{
+	cmd.Command = ff.Command{
 		Name:      "delete",
 		Usage:     "delete",
 		ShortHelp: "remove a bookmark",
@@ -35,24 +39,24 @@ func RegisterDelete(root *ff.Command, rootFlags *ff.FlagSet) {
 		Exec:      handlerMiddleware(cmd.handle),
 	}
 
-	root.Subcommands = append(root.Subcommands, &cmd.command)
+	return &cmd
 }
 
 func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 
-	dir, err := rootDir()
+	dir, err := command.RootDir()
 	if err != nil {
 		return err
 	}
 
-	err = validate(del.labels)
+	err = command.Validate(del.labels)
 	if err != nil {
 		return err
 	}
 
-	path := filepath.Join(dir, fileFrom(del.labels))
+	path := filepath.Join(dir, command.FileFrom(del.labels))
 	if len(args) == 0 {
-		ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
+		ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
 		if ok {
 			err = os.Remove(path)
 			return err
@@ -60,7 +64,7 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 		return nil
 	}
 
-	fh, err := os.OpenFile(path, os.O_RDWR, stdFileMode)
+	fh, err := os.OpenFile(path, os.O_RDWR, command.StdFileMode)
 	if err != nil {
 		return err
 	}
@@ -70,8 +74,8 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 	}()
 
 	content, _ := io.ReadAll(fh)
-	ll := findLines(content, args[0])
-	ok := confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%del line(s)", len(ll))), os.Stdin)
+	ll := command.FindLines(content, args[0])
+	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(ll))), os.Stdin)
 
 	if !ok {
 		return

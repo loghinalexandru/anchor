@@ -1,9 +1,11 @@
-package subcommand
+package types
 
 import (
 	"context"
 	"errors"
 	"os"
+
+	"github.com/loghinalexandru/anchor/internal/command"
 
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
@@ -14,17 +16,17 @@ var (
 )
 
 type initCmd struct {
-	command  ff.Command
+	Command  ff.Command
 	repoFlag bool
 }
 
-func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
+func NewInit(rootFlags *ff.FlagSet) *initCmd {
 	cmd := initCmd{}
 
 	flags := ff.NewFlagSet("init").SetParent(rootFlags)
 	_ = flags.BoolVar(&cmd.repoFlag, 'r', "repository", "used in order to init a git repository")
 
-	cmd.command = ff.Command{
+	cmd.Command = ff.Command{
 		Name:      "init",
 		Usage:     "init",
 		ShortHelp: "init a new empty home for anchor",
@@ -32,11 +34,11 @@ func RegisterInit(root *ff.Command, rootFlags *ff.FlagSet) {
 		Exec:      handlerMiddleware(cmd.handle),
 	}
 
-	root.Subcommands = append(root.Subcommands, &cmd.command)
+	return &cmd
 }
 
 func (init *initCmd) handle(_ context.Context, args []string) error {
-	dir, err := rootDir()
+	dir, err := command.RootDir()
 	if err != nil {
 		return err
 	}
@@ -55,7 +57,7 @@ func (init *initCmd) handle(_ context.Context, args []string) error {
 	}
 
 	if _, err = os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, stdFileMode)
+		err = os.Mkdir(dir, command.StdFileMode)
 		if err != nil {
 			return err
 		}

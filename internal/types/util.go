@@ -1,4 +1,4 @@
-package subcommand
+package types
 
 import (
 	"context"
@@ -21,13 +21,13 @@ func Execute(args []string) error {
 		Flags: rootFlags,
 	}
 
-	RegisterInit(rootCmd, rootFlags)
-	RegisterCreate(rootCmd, rootFlags)
-	RegisterGet(rootCmd, rootFlags)
-	RegisterDelete(rootCmd, rootFlags)
-	RegisterSync(rootCmd, rootFlags)
-	RegisterImport(rootCmd, rootFlags)
-	RegisterTree(rootCmd, rootFlags)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &NewCreate(rootFlags).Command)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &NewInit(rootFlags).Command)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &NewGet(rootFlags).Command)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &NewDelete(rootFlags).Command)
+	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(NewSync(rootFlags)))
+	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(NewImport(rootFlags)))
+	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(NewTree(rootFlags)))
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 	err := rootCmd.ParseAndRun(ctx, args)

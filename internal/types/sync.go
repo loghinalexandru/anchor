@@ -1,7 +1,8 @@
-package subcommand
+package types
 
 import (
 	"context"
+	"github.com/loghinalexandru/anchor/internal/command"
 
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
@@ -9,7 +10,7 @@ import (
 
 type syncCmd ff.Command
 
-func RegisterSync(root *ff.Command, rootFlags *ff.FlagSet) {
+func NewSync(rootFlags *ff.FlagSet) *syncCmd {
 	var cmd *syncCmd
 	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
 
@@ -21,11 +22,11 @@ func RegisterSync(root *ff.Command, rootFlags *ff.FlagSet) {
 		Exec:      handlerMiddleware(cmd.handle),
 	}
 
-	root.Subcommands = append(root.Subcommands, (*ff.Command)(cmd))
+	return cmd
 }
 
 func (*syncCmd) handle(context.Context, []string) error {
-	dir, err := rootDir()
+	dir, err := command.RootDir()
 	if err != nil {
 		return err
 	}
