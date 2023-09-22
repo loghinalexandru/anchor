@@ -14,12 +14,13 @@ import (
 var (
 	ErrDuplicate    = errors.New("duplicate bookmark")
 	ErrArgsMismatch = errors.New("mismatch in line arguments")
-	ErrInvalidTitle = errors.New("could not infer title and no flag was set")
+	ErrInvalidTitle = errors.New("could not determine title from URL")
 )
 
 type Bookmark struct {
-	title string
-	url   *url.URL
+	title  string
+	client *http.Client
+	url    *url.URL
 }
 
 func New(title string, rawURL string) (*Bookmark, error) {
@@ -28,10 +29,10 @@ func New(title string, rawURL string) (*Bookmark, error) {
 		return nil, err
 	}
 
-	rep := strings.NewReplacer("\"", "", "\n", "", "\r", "")
 	return &Bookmark{
-		title: rep.Replace(title),
-		url:   uri,
+		title:  title,
+		url:    uri,
+		client: http.DefaultClient,
 	}, nil
 }
 
@@ -45,7 +46,7 @@ func (b *Bookmark) TitleFromURL(ctx context.Context) error {
 		return err
 	}
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := b.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -113,7 +114,7 @@ func Parse(line string) (title, url string, err error) {
 }
 
 func findTitle(content []byte) string {
-	titleMatch := regexp.MustCompile("<title>(?P<title>.*)</title>")
+	titleMatch := regexp.MustCompile(`<title>(?P<title>.+?)</title>`)
 	match := titleMatch.FindSubmatch(content)
 
 	if len(match) == 0 {

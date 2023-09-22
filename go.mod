@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/go-git/go-git/v5 v5.9.0
+	github.com/google/go-cmp v0.5.9
 	github.com/peterbourgon/ff/v4 v4.0.0-alpha.3
 	github.com/virtualtam/netscape-go/v2 v2.1.0
 	github.com/xlab/treeprint v1.2.0

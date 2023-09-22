@@ -7,7 +7,6 @@ import (
 
 func RootDir() (string, error) {
 	home, err := os.UserHomeDir()
-
 	if err != nil {
 		return "", err
 	}
