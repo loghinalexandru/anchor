@@ -70,14 +70,13 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 	}
 
 	for _, l := range FindLines(content, pattern) {
-		title, url, err := bookmark.Parse(string(l))
+		b, err := bookmark.NewFromLine(string(l))
 		if err != nil {
-			fmt.Print(url)
 			return err
 		}
 
 		if get.openFlag {
-			err = open(url)
+			err = open(b.URL)
 			if err != nil {
 				return err
 			}
@@ -86,9 +85,9 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 		}
 
 		if get.fullFlag {
-			_, _ = fmt.Fprintln(os.Stdout, title, url)
+			_, _ = fmt.Fprintln(os.Stdout, b.Title, b.URL)
 		} else {
-			_, _ = fmt.Fprintln(os.Stdout, title)
+			_, _ = fmt.Fprintln(os.Stdout, b.Title)
 		}
 	}
 

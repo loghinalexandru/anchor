@@ -31,7 +31,7 @@ func FileFrom(labels []string) string {
 
 	exp := regexp.MustCompile(config.RegexpNotLabel)
 	for i, l := range labels {
-		labels[i] = exp.ReplaceAllString(l, "")
+		labels[i] = exp.ReplaceAllString(strings.ToLower(l), "")
 	}
 
 	tree := strings.Join(labels, config.StdSeparator)

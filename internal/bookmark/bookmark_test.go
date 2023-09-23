@@ -28,12 +28,12 @@ func TestNew(t *testing.T) {
 		t.Error("missing http client")
 	}
 
-	if got.title != title {
-		t.Error(cmp.Diff(title, got.title))
+	if got.Title != title {
+		t.Error(cmp.Diff(title, got.Title))
 	}
 
-	if got.url.String() != url {
-		t.Error(cmp.Diff(url, got.url))
+	if got.URL != url {
+		t.Error(cmp.Diff(url, got.URL))
 	}
 }
 
@@ -49,19 +49,78 @@ func TestNewWithInvalidURL(t *testing.T) {
 	}
 }
 
+func TestNewFromLine(t *testing.T) {
+	t.Parallel()
+
+	tsc := []struct {
+		input string
+		title string
+		url   string
+	}{
+		{
+			"\r\n\"Outlook\" \"https://outlook.live.com/mail/0/\"\n\r",
+			"Outlook",
+			"https://outlook.live.com/mail/0/",
+		},
+		{
+			`"Gmail"Test""" "https://accounts.google.com/b/0/AddMailService"   `,
+			"GmailTest",
+			"https://accounts.google.com/b/0/AddMailService"},
+		{`"YouTube" "https://youtube.com/"`,
+			"YouTube",
+			"https://youtube.com/",
+		},
+	}
+
+	for _, c := range tsc {
+		t.Run(c.input, func(t *testing.T) {
+			bookmark, err := NewFromLine(c.input)
+			if err != nil {
+				t.Fatalf("unexpected error; got %q", err)
+			}
+
+			if !cmp.Equal(bookmark.Title, c.title) {
+				t.Error(cmp.Diff(c.title, bookmark.Title))
+			}
+
+			if !cmp.Equal(bookmark.URL, c.url) {
+				t.Error(cmp.Diff(c.url, bookmark.URL))
+			}
+		})
+	}
+}
+
 func TestString(t *testing.T) {
 	t.Parallel()
 
-	want := `"Test Book" "https://google.com"`
-	bookmark, err := New("Test Book", "https://google.com")
-	if err != nil {
-		t.Fatalf("unexpected error; got %q", err)
+	tsc := []struct {
+		title string
+		url   string
+		want  string
+	}{
+		{
+			title: "Test Title",
+			url:   "https://google.com",
+			want:  `"Test Title" "https://google.com"`,
+		},
+		{
+			title: `Test "Title" "Test Title Two`,
+			url:   "https://google.com",
+			want:  `"Test Title Test Title Two" "https://google.com"`,
+		},
 	}
 
-	got := bookmark.String()
+	for _, c := range tsc {
+		t.Run(c.title, func(t *testing.T) {
+			bookmark, err := New(c.title, c.url)
+			if err != nil {
+				t.Fatalf("unexpected error; got %q", err)
+			}
 
-	if !cmp.Equal(got, want) {
-		t.Error(cmp.Diff(want, got))
+			if !cmp.Equal(c.want, bookmark.String()) {
+				t.Errorf("wrong serialization: want %s , got: %s", c.want, bookmark.String())
+			}
+		})
 	}
 }
 
@@ -108,8 +167,8 @@ func TestTitleFromURL(t *testing.T) {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(bookmark.title, c.want) {
-				t.Error(cmp.Diff(c.want, bookmark.title))
+			if !cmp.Equal(bookmark.Title, c.want) {
+				t.Error(cmp.Diff(c.want, bookmark.Title))
 			}
 		})
 	}
@@ -169,47 +228,6 @@ func TestWrite(t *testing.T) {
 
 	if !cmp.Equal(got, want) {
 		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestParse(t *testing.T) {
-	t.Parallel()
-
-	tsc := []struct {
-		input string
-		title string
-		url   string
-	}{
-		{
-			"\r\n\"Outlook\" \"https://outlook.live.com/mail/0/\"\n\r",
-			"Outlook",
-			"https://outlook.live.com/mail/0/",
-		},
-		{
-			`"Gmail" "https://accounts.google.com/b/0/AddMailService"   `,
-			"Gmail",
-			"https://accounts.google.com/b/0/AddMailService"},
-		{`"YouTube" "https://youtube.com/"`,
-			"YouTube",
-			"https://youtube.com/",
-		},
-	}
-
-	for _, c := range tsc {
-		t.Run(c.input, func(t *testing.T) {
-			title, url, err := Parse(c.input)
-			if err != nil {
-				t.Fatalf("unexpected error; got %q", err)
-			}
-
-			if !cmp.Equal(title, c.title) {
-				t.Error(cmp.Diff(c.title, title))
-			}
-
-			if !cmp.Equal(url, c.url) {
-				t.Error(cmp.Diff(c.url, url))
-			}
-		})
 	}
 }
 

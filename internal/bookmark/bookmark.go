@@ -18,30 +18,41 @@ var (
 )
 
 type Bookmark struct {
-	title  string
+	Title  string
+	URL    string
 	client *http.Client
-	url    *url.URL
 }
 
 func New(title string, rawURL string) (*Bookmark, error) {
-	uri, err := url.ParseRequestURI(rawURL)
+	_, err := url.ParseRequestURI(rawURL)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Bookmark{
-		title:  title,
-		url:    uri,
+		Title:  sanitize(title),
+		URL:    rawURL,
 		client: http.DefaultClient,
 	}, nil
 }
 
+func NewFromLine(line string) (*Bookmark, error) {
+	line = strings.Trim(line, " \"\r\n")
+	parts := strings.Split(line, `" "`)
+
+	if len(parts) != 2 {
+		return nil, ErrArgsMismatch
+	}
+
+	return New(parts[0], parts[1])
+}
+
 func (b *Bookmark) String() string {
-	return fmt.Sprintf("%q %q", b.title, b.url.String())
+	return fmt.Sprintf("%q %q", b.Title, b.URL)
 }
 
 func (b *Bookmark) TitleFromURL(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, "GET", b.url.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", b.URL, nil)
 	if err != nil {
 		return err
 	}
@@ -66,7 +77,7 @@ func (b *Bookmark) TitleFromURL(ctx context.Context) error {
 		return ErrInvalidTitle
 	}
 
-	b.title = title
+	b.Title = title
 	return nil
 }
 
@@ -81,36 +92,13 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 		return err
 	}
 
-	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.url.String())))
+	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.URL)))
 	if exp.Match(content) {
-		return fmt.Errorf("%s: %w", b.url, ErrDuplicate)
+		return fmt.Errorf("%s: %w", b.URL, ErrDuplicate)
 	}
 
 	_, err = fmt.Fprintln(rw, b.String())
 	return err
-}
-
-func Parse(line string) (title, url string, err error) {
-	quoted := false
-	line = strings.Trim(line, " \r\n")
-
-	res := strings.FieldsFunc(line, func(r rune) bool {
-		if r == '"' {
-			quoted = !quoted
-		}
-		return !quoted && r == ' '
-	})
-
-	if len(res) != 2 {
-		fmt.Println(len(res))
-		fmt.Println(line)
-		return title, url, ErrArgsMismatch
-	}
-
-	title = strings.Trim(res[0], " \"\r\n")
-	url = strings.Trim(res[1], " \"\r\n")
-
-	return title, url, nil
 }
 
 func findTitle(content []byte) string {
@@ -122,4 +110,9 @@ func findTitle(content []byte) string {
 	}
 
 	return string(match[1])
+}
+
+func sanitize(input string) string {
+	repl := strings.NewReplacer("\n", "", "\r", "", "\"", "")
+	return repl.Replace(input)
 }
