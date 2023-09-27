@@ -37,14 +37,13 @@ func newImport(rootFlags *ff.FlagSet) *importCmd {
 }
 
 func (*importCmd) handle(_ context.Context, args []string) error {
-
 	dir, err := config.RootDir()
 	if err != nil {
 		return err
 	}
 
 	if len(args) == 0 {
-		return err
+		return ErrInvalidImportFile
 	}
 
 	fh, err := os.Open(args[0])

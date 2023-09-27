@@ -44,7 +44,7 @@ func (init *initCmd) handle(_ context.Context, args []string) error {
 
 	if init.repoFlag {
 		if len(args) == 0 {
-			return err
+			return ErrInvalidURL
 		}
 
 		err = storage.CloneWithSSH(dir, args[0])

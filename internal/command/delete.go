@@ -1,7 +1,6 @@
 package command
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -41,7 +40,6 @@ func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 }
 
 func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
-
 	dir, err := config.RootDir()
 	if err != nil {
 		return err
@@ -54,12 +52,7 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 
 	path := filepath.Join(dir, FileFrom(del.labels))
 	if len(args) == 0 {
-		ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
-		if ok {
-			err = os.Remove(path)
-			return err
-		}
-		return nil
+		return deleteFile(path)
 	}
 
 	fh, err := os.OpenFile(path, os.O_RDWR, config.StdFileMode)
@@ -71,27 +64,46 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 		err = errors.Join(err, fh.Close())
 	}()
 
-	content, _ := io.ReadAll(fh)
-	ll := FindLines(content, args[0])
-	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(ll))), os.Stdin)
-
-	if !ok {
-		return
-	}
-
-	for _, l := range ll {
-		l = append(l, byte('\n'))
-		content = bytes.ReplaceAll(content, l, []byte(""))
-	}
-
-	// Refactor this to be more efficient
-	_ = fh.Truncate(0)
-	_, _ = fh.Seek(0, 0)
-	_, err = fh.Write(content)
-
+	newContent, err := deleteContent(fh, args[0])
 	if err != nil {
 		return err
 	}
 
+	err = fh.Truncate(0)
+	if err != nil {
+		return err
+	}
+
+	_, err = fh.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+	_, err = fh.Write(newContent)
+
+	return err
+}
+
+func deleteFile(path string) error {
+	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
+	if ok {
+		err := os.Remove(path)
+		return err
+	}
+
 	return nil
+}
+
+func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
+	content, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := FindLines(content, pattern)
+	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(lines))), os.Stdin)
+	if !ok {
+		return content, nil
+	}
+
+	return DeleteLines(content, pattern), nil
 }

@@ -11,5 +11,5 @@ const (
 	StdSeparator   = "."
 	RegexpNotLabel = `[^a-z0-9-]`
 	RegexpLabel    = `^[a-z0-9-]+$`
-	RegexpLine     = `(?im)^.+%s.+$`
+	RegexpLine     = `(?im)^.+%s.+\n`
 )
