@@ -3,7 +3,9 @@ package command
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/config"
@@ -36,6 +38,24 @@ func FileFrom(labels []string) string {
 
 	tree := strings.Join(labels, config.StdSeparator)
 	return strings.ToLower(tree)
+}
+
+func Open(url string) error {
+	var cmd string
+	var args []string
+
+	switch runtime.GOOS {
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start"}
+	case "darwin":
+		cmd = "open"
+	default:
+		cmd = "xdg-open"
+	}
+
+	args = append(args, url)
+	return exec.Command(cmd, args...).Start()
 }
 
 func FindLines(content []byte, pattern string) [][]byte {

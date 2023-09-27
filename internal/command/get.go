@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/config"
@@ -76,7 +74,7 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 		}
 
 		if get.openFlag {
-			err = open(b.URL)
+			err = Open(b.URL)
 			if err != nil {
 				return err
 			}
@@ -92,22 +90,4 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 	}
 
 	return nil
-}
-
-func open(url string) error {
-	var cmd string
-	var args []string
-
-	switch runtime.GOOS {
-	case "windows":
-		cmd = "cmd"
-		args = []string{"/c", "start"}
-	case "darwin":
-		cmd = "open"
-	default:
-		cmd = "xdg-open"
-	}
-
-	args = append(args, url)
-	return exec.Command(cmd, args...).Start()
 }

@@ -12,8 +12,8 @@ type syncCmd ff.Command
 
 func newSync(rootFlags *ff.FlagSet) *syncCmd {
 	var cmd *syncCmd
-	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
 
+	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
 	cmd = &syncCmd{
 		Name:      "sync",
 		Usage:     "sync",
