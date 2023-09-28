@@ -206,7 +206,6 @@ func TestWrite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}
-	defer fh.Close()
 
 	want := "\"test-title \\\\n test\" \"https://google.com\"\n"
 	bookmark, err := New("test-title \\n test", "https://google.com")
@@ -215,6 +214,11 @@ func TestWrite(t *testing.T) {
 	}
 
 	err = bookmark.Write(fh)
+	if err != nil {
+		t.Fatalf("unexpected error; got %q", err)
+	}
+
+	err = fh.Close()
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}

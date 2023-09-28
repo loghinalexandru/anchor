@@ -39,7 +39,6 @@ func newGet(rootFlags *ff.FlagSet) *getCmd {
 }
 
 func (get *getCmd) handle(_ context.Context, args []string) error {
-
 	dir, err := config.RootDir()
 	if err != nil {
 		return err

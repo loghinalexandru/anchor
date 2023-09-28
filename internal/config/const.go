@@ -12,4 +12,5 @@ const (
 	RegexpNotLabel = `[^a-z0-9-]`
 	RegexpLabel    = `^[a-z0-9-]+$`
 	RegexpLine     = `(?im)^.+%s.+\n`
+	RegexpTitle    = `(?im).+%s.+ .+`
 )

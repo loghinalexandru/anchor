@@ -59,7 +59,7 @@ func Open(url string) error {
 }
 
 func FindLines(content []byte, pattern string) [][]byte {
-	regex := regexp.MustCompile(fmt.Sprintf(config.RegexpLine, regexp.QuoteMeta(pattern)))
+	regex := regexp.MustCompile(fmt.Sprintf(config.RegexpTitle, regexp.QuoteMeta(pattern)))
 	return regex.FindAll(content, -1)
 }
 

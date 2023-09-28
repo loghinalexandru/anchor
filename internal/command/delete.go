@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	config "github.com/loghinalexandru/anchor/internal/config"
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/peterbourgon/ff/v4"
 )

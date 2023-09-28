@@ -1,0 +1,6 @@
+"AWS Management Console" "https://eu-central-1.console.aws.amazon.com/console/home?nc2=h_ct&src=header-signin&region=eu-central-1"
+"Access Panel Applications" "https://account.activedirectory.windowsazure.com/r#/applications"
+"Outlook" "https://outlook.live.com/mail/0/"
+"Gmail" "https://accounts.google.com/b/0/AddMailService"
+"YouTube" "https://youtube.com/"
+
