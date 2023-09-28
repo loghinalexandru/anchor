@@ -67,7 +67,6 @@ func (crt *createCmd) handle(ctx context.Context, args []string) error {
 
 	err = b.Write(file)
 	err = errors.Join(err, file.Close())
-
 	if err != nil {
 		return err
 	}

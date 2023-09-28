@@ -50,7 +50,6 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 	}
 
 	path, err := os.Open(filepath.Join(dir, FileFrom(get.labels)))
-
 	if err != nil {
 		return err
 	}

@@ -66,7 +66,8 @@ func TestNewFromLine(t *testing.T) {
 			`"Gmail"Test""" "https://accounts.google.com/b/0/AddMailService"   `,
 			"GmailTest",
 			"https://accounts.google.com/b/0/AddMailService"},
-		{`"YouTube" "https://youtube.com/"`,
+		{
+			`"YouTube" "https://youtube.com/"`,
 			"YouTube",
 			"https://youtube.com/",
 		},
