@@ -1,6 +1,7 @@
 package command
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"strings"
@@ -62,6 +63,33 @@ func TestFindLines(t *testing.T) {
 					t.Log(string(match))
 					t.Errorf("missing pattern %q in match", c.pattern)
 				}
+			}
+		})
+	}
+}
+
+func TestDeleteLines(t *testing.T) {
+	t.Parallel()
+
+	tsc := []string{"y", "ou", "aws", "o", "gmail"}
+
+	file, err := os.Open("testdata/root.txt")
+	if err != nil {
+		t.Fatalf("unexpected error; got %q", err)
+	}
+
+	defer file.Close()
+
+	in, err := io.ReadAll(file)
+	if err != nil {
+		t.Fatalf("unexpected error; got %q", err)
+	}
+
+	for _, c := range tsc {
+		t.Run(c, func(t *testing.T) {
+			got := DeleteLines(in, c)
+			if bytes.Contains(bytes.ToLower(got), []byte(c)) {
+				t.Errorf("unexpected substring pattern %q; got %q", c, got)
 			}
 		})
 	}
