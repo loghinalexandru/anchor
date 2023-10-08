@@ -26,13 +26,13 @@ func Confirmation(s string, in io.Reader, out io.Writer) bool {
 		case "y", "yes":
 			return true
 		case "n", "no":
-			_, _ = fmt.Fprintf(out, "Aborting...")
+			_, _ = fmt.Fprintln(out, "Aborting...")
 			return false
 		}
 
 		retryMax--
 	}
 
-	_, _ = fmt.Fprintf(out, "Exceeded retry count")
+	_, _ = fmt.Fprintln(out, "Exceeded retry count")
 	return false
 }

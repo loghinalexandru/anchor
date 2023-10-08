@@ -44,12 +44,8 @@ func (sync *syncCmd) handle(context.Context, []string) error {
 	}
 
 	status, err := sync.storer.Status()
-	if err != nil {
+	if err != nil || status == "" {
 		return err
-	}
-
-	if status == "" {
-		return nil
 	}
 
 	_, _ = fmt.Fprintln(os.Stdout, status)

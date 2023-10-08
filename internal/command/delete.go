@@ -15,6 +15,7 @@ import (
 
 const (
 	msgDeleteConfirmation = "You are about to delete %s. Proceed?"
+	msgDeleteEmpty        = "No match found. Skipping..."
 )
 
 type deleteCmd struct {
@@ -100,6 +101,11 @@ func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
 	}
 
 	lines := FindLines(content, pattern)
+	if len(lines) == 0 {
+		fmt.Println(msgDeleteEmpty)
+		return content, nil
+	}
+
 	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(lines))), os.Stdin, os.Stdout)
 	if !ok {
 		return content, nil
