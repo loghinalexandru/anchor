@@ -84,7 +84,7 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 }
 
 func deleteFile(path string) error {
-	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin)
+	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin, os.Stdout)
 	if ok {
 		err := os.Remove(path)
 		return err
@@ -100,7 +100,7 @@ func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
 	}
 
 	lines := FindLines(content, pattern)
-	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(lines))), os.Stdin)
+	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(lines))), os.Stdin, os.Stdout)
 	if !ok {
 		return content, nil
 	}

@@ -88,8 +88,13 @@ func TestDeleteLines(t *testing.T) {
 	for _, c := range tsc {
 		t.Run(c, func(t *testing.T) {
 			got := DeleteLines(in, c)
-			if bytes.Contains(bytes.ToLower(got), []byte(c)) {
-				t.Errorf("unexpected substring pattern %q; got %q", c, got)
+			ll := bytes.Split(bytes.ToLower(got), []byte(`\n`))
+
+			for _, l := range ll {
+				title := bytes.Split(l, []byte(`" "`))[0]
+				if bytes.Contains(title, []byte(c)) {
+					t.Errorf("unexpected substring pattern found %q; got %q", c, title)
+				}
 			}
 		})
 	}

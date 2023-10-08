@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/loghinalexandru/anchor/internal/config"
 )
 
 var (
@@ -92,7 +94,7 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 		return err
 	}
 
-	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.URL)))
+	exp := regexp.MustCompile(fmt.Sprintf(config.RegexpURL, regexp.QuoteMeta(b.URL)))
 	if exp.Match(content) {
 		return fmt.Errorf("%s: %w", b.URL, ErrDuplicate)
 	}
