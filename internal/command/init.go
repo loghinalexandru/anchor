@@ -47,7 +47,8 @@ func (init *initCmd) handle(_ context.Context, args []string) error {
 			return ErrInvalidURL
 		}
 
-		err = storage.CloneWithSSH(dir, args[0])
+		s, _ := storage.NewGitStorage()
+		err = s.CloneWithSSH(args[0])
 		if err != nil {
 			return err
 		}

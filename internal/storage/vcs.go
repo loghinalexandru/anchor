@@ -4,7 +4,9 @@ import (
 	"errors"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/loghinalexandru/anchor/internal/config"
 )
 
 const (
@@ -12,46 +14,68 @@ const (
 	msgCommit = "Sync bookmarks"
 )
 
-func CloneWithSSH(path string, remote string) error {
-	auth, err := ssh.NewSSHAgentAuth(stdUser)
-	if err != nil {
-		return err
-	}
-
-	_, err = git.PlainClone(path, false, &git.CloneOptions{
-		URL:  remote,
-		Auth: auth,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+type GitStorage struct {
+	path string
+	auth transport.AuthMethod
 }
 
-func PushWithSSH(path string) error {
-	repo, err := git.PlainOpen(path)
+func NewGitStorage() (*GitStorage, error) {
+	dir, err := config.RootDir()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	auth, err := ssh.NewSSHAgentAuth(stdUser)
 	if err != nil {
+		return nil, err
+	}
+
+	return &GitStorage{
+		path: dir,
+		auth: auth,
+	}, nil
+}
+
+func (storage *GitStorage) CloneWithSSH(remote string) error {
+	_, err := git.PlainClone(storage.path, false, &git.CloneOptions{
+		URL:  remote,
+		Auth: storage.auth,
+	})
+
+	return err
+}
+
+func (storage *GitStorage) Read() error {
+	repo, err := git.PlainOpen(storage.path)
+	if err != nil {
 		return err
 	}
 
-	tree, _ := repo.Worktree()
+	tree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
 	err = tree.Pull(&git.PullOptions{
 		RemoteName: git.DefaultRemoteName,
-		Auth:       auth,
+		Auth:       storage.auth,
 	})
 
 	if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
 		return err
 	}
 
-	status, err := tree.Status()
-	if err != nil || status.IsClean() {
+	return nil
+}
+
+func (storage *GitStorage) Write() error {
+	repo, err := git.PlainOpen(storage.path)
+	if err != nil {
+		return err
+	}
+
+	tree, err := repo.Worktree()
+	if err != nil {
 		return err
 	}
 
@@ -67,12 +91,27 @@ func PushWithSSH(path string) error {
 
 	err = repo.Push(&git.PushOptions{
 		RemoteName: git.DefaultRemoteName,
-		Auth:       auth,
+		Auth:       storage.auth,
 	})
 
+	return err
+}
+
+func (storage *GitStorage) Status() (string, error) {
+	repo, err := git.PlainOpen(storage.path)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	tree, err := repo.Worktree()
+	if err != nil {
+		return "", err
+	}
+
+	status, err := tree.Status()
+	if err != nil {
+		return "", err
+	}
+
+	return status.String(), nil
 }

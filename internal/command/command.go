@@ -18,7 +18,7 @@ func newExec() *ff.Command {
 	rootCmd.Subcommands = append(rootCmd.Subcommands, &newInit(rootFlags).command)
 	rootCmd.Subcommands = append(rootCmd.Subcommands, &newGet(rootFlags).command)
 	rootCmd.Subcommands = append(rootCmd.Subcommands, &newDelete(rootFlags).command)
-	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newSync(rootFlags)))
+	rootCmd.Subcommands = append(rootCmd.Subcommands, &newSync(rootFlags).command)
 	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newImport(rootFlags)))
 	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newTree(rootFlags)))
 
