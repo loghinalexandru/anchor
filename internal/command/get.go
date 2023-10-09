@@ -2,30 +2,41 @@ package command
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/peterbourgon/ff/v4"
 )
 
+const (
+	formatShort = "%d. %s\n"
+	formatLong  = "%d. %s %s\n"
+)
+
+var (
+	ErrInvalidLine = errors.New("invalid line specified")
+)
+
 type getCmd struct {
-	command  ff.Command
-	labels   []string
-	fullFlag bool
-	openFlag bool
+	command ff.Command
+	labels  []string
+	pattern string
+	full    bool
 }
 
 func newGet(rootFlags *ff.FlagSet) *getCmd {
 	cmd := getCmd{}
 
 	flags := ff.NewFlagSet("get").SetParent(rootFlags)
-	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy for each")
-	_ = flags.BoolVar(&cmd.fullFlag, 'f', "full", "show full bookmark entry")
-	_ = flags.BoolVar(&cmd.openFlag, 'o', "open", "open specified link")
+	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy")
+	_ = flags.StringVar(&cmd.pattern, 'p', "pattern", "", "match for pattern in bookmark title")
+	_ = flags.BoolVar(&cmd.full, 'f', "full", "show full bookmark entry")
 
 	cmd.command = ff.Command{
 		Name:      "get",
@@ -60,30 +71,42 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 	}
 
 	_ = path.Close()
-	var pattern string
-	if len(args) >= 1 {
-		pattern = args[0]
-	}
+	match := FindLines(content, get.pattern)
 
-	for _, l := range FindLines(content, pattern) {
-		b, err := bookmark.NewFromLine(string(l))
+	// Redesign this
+	if len(args) >= 1 {
+		line, err := strconv.ParseUint(args[0], 10, 32)
 		if err != nil {
 			return err
 		}
 
-		if get.openFlag {
-			err = Open(b.URL)
-			if err != nil {
-				return err
-			}
-
-			return nil
+		if int(line) > len(match) || line == 0 {
+			return ErrInvalidLine
 		}
 
-		if get.fullFlag {
-			_, _ = fmt.Fprintln(os.Stdout, b.Title, b.URL)
+		bmk, err := bookmark.NewFromLine(string(match[line-1]))
+		if err != nil {
+			return err
+		}
+
+		err = Open(bmk.URL)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	for i, l := range match {
+		bmk, err := bookmark.NewFromLine(string(l))
+		if err != nil {
+			return err
+		}
+
+		if get.full {
+			_, _ = fmt.Fprintf(os.Stdout, formatLong, i+1, bmk.Title, bmk.URL)
 		} else {
-			_, _ = fmt.Fprintln(os.Stdout, b.Title)
+			_, _ = fmt.Fprintf(os.Stdout, formatShort, i+1, bmk.Title)
 		}
 	}
 
