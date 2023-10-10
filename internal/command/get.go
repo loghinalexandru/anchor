@@ -2,32 +2,21 @@ package command
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 
-	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/loghinalexandru/anchor/internal/config"
+	"github.com/loghinalexandru/anchor/internal/model"
+	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
 	"github.com/peterbourgon/ff/v4"
-)
-
-const (
-	formatShort = "%d. %s\n"
-	formatLong  = "%d. %s %s\n"
-)
-
-var (
-	ErrInvalidLine = errors.New("invalid line specified")
 )
 
 type getCmd struct {
 	command ff.Command
 	labels  []string
-	pattern string
-	full    bool
 }
 
 func newGet(rootFlags *ff.FlagSet) *getCmd {
@@ -35,8 +24,6 @@ func newGet(rootFlags *ff.FlagSet) *getCmd {
 
 	flags := ff.NewFlagSet("get").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy")
-	_ = flags.StringVar(&cmd.pattern, 'p', "pattern", "", "match for pattern in bookmark title")
-	_ = flags.BoolVar(&cmd.full, 'f', "full", "show full bookmark entry")
 
 	cmd.command = ff.Command{
 		Name:      "get",
@@ -71,44 +58,18 @@ func (get *getCmd) handle(_ context.Context, args []string) error {
 	}
 
 	_ = path.Close()
-	match := FindLines(content, get.pattern)
-
-	// Redesign this
-	if len(args) >= 1 {
-		line, err := strconv.ParseUint(args[0], 10, 32)
-		if err != nil {
-			return err
-		}
-
-		if int(line) > len(match) || line == 0 {
-			return ErrInvalidLine
-		}
-
-		bmk, err := bookmark.NewFromLine(string(match[line-1]))
-		if err != nil {
-			return err
-		}
-
-		err = Open(bmk.URL)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
+	match := FindLines(content, "")
+	bookmarks := make([]list.Item, len(match))
 
 	for i, l := range match {
-		bmk, err := bookmark.NewFromLine(string(l))
+		bookmarks[i], err = model.NewFromLine(string(l))
 		if err != nil {
 			return err
 		}
-
-		if get.full {
-			_, _ = fmt.Fprintf(os.Stdout, formatLong, i+1, bmk.Title, bmk.URL)
-		} else {
-			_, _ = fmt.Fprintf(os.Stdout, formatShort, i+1, bmk.Title)
-		}
 	}
 
-	return nil
+	p := tea.NewProgram(bubbletea.NewView(bookmarks))
+	_, err = p.Run()
+
+	return err
 }

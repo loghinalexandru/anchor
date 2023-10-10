@@ -1,4 +1,4 @@
-package bookmark
+package model
 
 import (
 	"bytes"

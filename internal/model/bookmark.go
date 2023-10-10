@@ -1,4 +1,4 @@
-package bookmark
+package model
 
 import (
 	"context"
@@ -20,7 +20,7 @@ var (
 )
 
 type Bookmark struct {
-	Title  string
+	title  string
 	URL    string
 	client *http.Client
 }
@@ -32,7 +32,7 @@ func New(title string, rawURL string) (*Bookmark, error) {
 	}
 
 	return &Bookmark{
-		Title:  sanitize(title),
+		title:  sanitize(title),
 		URL:    rawURL,
 		client: http.DefaultClient,
 	}, nil
@@ -79,7 +79,7 @@ func (b *Bookmark) TitleFromURL(ctx context.Context) error {
 		return ErrInvalidTitle
 	}
 
-	b.Title = title
+	b.title = title
 	return nil
 }
 
@@ -101,6 +101,18 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 
 	_, err = fmt.Fprintln(rw, b.String())
 	return err
+}
+
+func (b *Bookmark) Title() string {
+	return b.title
+}
+
+func (b *Bookmark) Description() string {
+	return b.URL
+}
+
+func (b *Bookmark) FilterValue() string {
+	return b.title
 }
 
 func findTitle(content []byte) string {
