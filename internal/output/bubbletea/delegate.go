@@ -12,7 +12,7 @@ import (
 
 func newItemDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
-	d.Styles.SelectedTitle = lipgloss.NewStyle().Bold(false).Foreground(lipgloss.NoColor{})
+	d.Styles.SelectedTitle = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
 	d.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
 
 	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
