@@ -22,6 +22,10 @@ func newExec() *ff.Command {
 	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newImport(rootFlags)))
 	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newTree(rootFlags)))
 
+	for _, c := range rootCmd.Subcommands {
+		c.Exec = handlerMiddleware(c.Exec)
+	}
+
 	return rootCmd
 }
 

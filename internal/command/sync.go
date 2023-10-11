@@ -30,7 +30,7 @@ func newSync(rootFlags *ff.FlagSet) *syncCmd {
 		Usage:     "sync",
 		ShortHelp: "sync changes with configured remote",
 		Flags:     flags,
-		Exec:      handlerMiddleware(cmd.handle),
+		Exec:      cmd.handle,
 	}
 	cmd.storer, _ = storage.NewGitStorage()
 

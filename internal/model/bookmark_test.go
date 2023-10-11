@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 		t.Error("missing http client")
 	}
 
-	if got.Title != title {
+	if got.Name != title {
 		t.Error(cmp.Diff(title, got.Title))
 	}
 
@@ -80,8 +80,8 @@ func TestNewFromLine(t *testing.T) {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(bookmark.Title, c.title) {
-				t.Error(cmp.Diff(c.title, bookmark.Title))
+			if !cmp.Equal(bookmark.Name, c.title) {
+				t.Error(cmp.Diff(c.title, bookmark.Name))
 			}
 
 			if !cmp.Equal(bookmark.URL, c.url) {
@@ -168,8 +168,8 @@ func TestTitleFromURL(t *testing.T) {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(bookmark.Title, c.want) {
-				t.Error(cmp.Diff(c.want, bookmark.Title))
+			if !cmp.Equal(bookmark.Name, c.want) {
+				t.Error(cmp.Diff(c.want, bookmark.Name))
 			}
 		})
 	}

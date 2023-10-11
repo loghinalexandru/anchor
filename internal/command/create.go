@@ -29,7 +29,7 @@ func newCreate(rootFlags *ff.FlagSet) *createCmd {
 		Usage:     "create",
 		ShortHelp: "add a bookmark with set labels",
 		Flags:     flags,
-		Exec:      handlerMiddleware(cmd.handle),
+		Exec:      cmd.handle,
 	}
 
 	return &cmd

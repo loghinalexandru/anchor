@@ -30,7 +30,7 @@ func newInit(rootFlags *ff.FlagSet) *initCmd {
 		Usage:     "init",
 		ShortHelp: "init a new empty home for anchor",
 		Flags:     flags,
-		Exec:      handlerMiddleware(cmd.handle),
+		Exec:      cmd.handle,
 	}
 
 	return &cmd

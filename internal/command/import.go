@@ -30,7 +30,7 @@ func newImport(rootFlags *ff.FlagSet) *importCmd {
 		Usage:     "import",
 		ShortHelp: "import bookmarks from a file",
 		Flags:     flags,
-		Exec:      handlerMiddleware(cmd.handle),
+		Exec:      cmd.handle,
 	}
 
 	return &cmd

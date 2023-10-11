@@ -30,7 +30,7 @@ func newGet(rootFlags *ff.FlagSet) *getCmd {
 		Usage:     "get",
 		ShortHelp: "get existing bookmarks",
 		Flags:     flags,
-		Exec:      handlerMiddleware(cmd.handle),
+		Exec:      cmd.handle,
 	}
 
 	return &cmd

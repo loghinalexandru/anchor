@@ -34,7 +34,7 @@ func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 		Usage:     "delete",
 		ShortHelp: "remove a bookmark",
 		Flags:     flags,
-		Exec:      handlerMiddleware(cmd.handle),
+		Exec:      cmd.handle,
 	}
 
 	return &cmd

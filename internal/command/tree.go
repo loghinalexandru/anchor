@@ -21,7 +21,7 @@ func newTree(rootFlags *ff.FlagSet) *treeCmd {
 		Usage:     "tree",
 		ShortHelp: "list available labels in a tree structure",
 		Flags:     flags,
-		Exec:      handlerMiddleware(cmd.handle),
+		Exec:      cmd.handle,
 	}
 
 	return cmd

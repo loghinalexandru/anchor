@@ -20,19 +20,19 @@ var (
 )
 
 type Bookmark struct {
-	title  string
+	Name   string
 	URL    string
 	client *http.Client
 }
 
-func New(title string, rawURL string) (*Bookmark, error) {
+func New(name string, rawURL string) (*Bookmark, error) {
 	_, err := url.ParseRequestURI(rawURL)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Bookmark{
-		title:  sanitize(title),
+		Name:   sanitize(name),
 		URL:    rawURL,
 		client: http.DefaultClient,
 	}, nil
@@ -50,7 +50,7 @@ func NewFromLine(line string) (*Bookmark, error) {
 }
 
 func (b *Bookmark) String() string {
-	return fmt.Sprintf("%q %q", b.Title, b.URL)
+	return fmt.Sprintf("%q %q", b.Name, b.URL)
 }
 
 func (b *Bookmark) TitleFromURL(ctx context.Context) error {
@@ -79,7 +79,7 @@ func (b *Bookmark) TitleFromURL(ctx context.Context) error {
 		return ErrInvalidTitle
 	}
 
-	b.title = title
+	b.Name = title
 	return nil
 }
 
@@ -104,7 +104,7 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 }
 
 func (b *Bookmark) Title() string {
-	return b.title
+	return b.Name
 }
 
 func (b *Bookmark) Description() string {
@@ -112,7 +112,7 @@ func (b *Bookmark) Description() string {
 }
 
 func (b *Bookmark) FilterValue() string {
-	return b.title
+	return b.Name
 }
 
 func findTitle(content []byte) string {

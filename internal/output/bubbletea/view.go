@@ -6,41 +6,43 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(0, 0, 0, 2)
-
 type View struct {
 	bookmarks list.Model
+	style     lipgloss.Style
 }
 
-func NewView(bookmarks []list.Item) View {
+func NewView(bookmarks []list.Item) *View {
 	viewList := list.New(bookmarks, newItemDelegate(), 0, 0)
 	viewList.Title = "Bookmarks"
+	viewList.FilterInput.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
+	viewList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
 
-	return View{
+	return &View{
 		bookmarks: viewList,
+		style:     lipgloss.NewStyle().Margin(0, 0, 0, 2),
 	}
 }
 
-func (m View) Init() tea.Cmd {
+func (v *View) Init() tea.Cmd {
 	return nil
 }
 
-func (m View) View() string {
-	return docStyle.Render(m.bookmarks.View())
+func (v *View) View() string {
+	return v.style.Render(v.bookmarks.View())
 }
 
-func (m View) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (v *View) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
-			return m, tea.Quit
+			return v, tea.Quit
 		}
 	case tea.WindowSizeMsg:
-		h, v := docStyle.GetFrameSize()
-		m.bookmarks.SetSize(msg.Width-h, msg.Height-v)
+		x, y := v.style.GetFrameSize()
+		v.bookmarks.SetSize(msg.Width-x, msg.Height-y)
 	}
 
 	var cmd tea.Cmd
-	m.bookmarks, cmd = m.bookmarks.Update(msg)
-	return m, cmd
+	v.bookmarks, cmd = v.bookmarks.Update(msg)
+	return v, cmd
 }
