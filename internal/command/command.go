@@ -23,7 +23,7 @@ func newExec() *ff.Command {
 	rootCmd.Subcommands = append(rootCmd.Subcommands, (*ff.Command)(newTree(rootFlags)))
 
 	for _, c := range rootCmd.Subcommands {
-		c.Exec = handlerMiddleware(c.Exec)
+		c.Exec = contextHandlerMiddleware(c.Exec)
 	}
 
 	return rootCmd
@@ -31,7 +31,7 @@ func newExec() *ff.Command {
 
 type handlerFunc func(ctx context.Context, args []string) error
 
-func handlerMiddleware(next handlerFunc) handlerFunc {
+func contextHandlerMiddleware(next handlerFunc) handlerFunc {
 	return func(ctx context.Context, args []string) error {
 		res := make(chan error, 1)
 

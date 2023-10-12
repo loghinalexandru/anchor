@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/loghinalexandru/anchor/internal/model"
+
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/peterbourgon/ff/v4"
@@ -21,6 +23,7 @@ const (
 type deleteCmd struct {
 	command ff.Command
 	labels  []string
+	pattern string
 }
 
 func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
@@ -28,6 +31,7 @@ func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 
 	flags := ff.NewFlagSet("delete").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
+	_ = flags.StringVar(&cmd.pattern, 'p', "pattern", "", "delete items matching the pattern")
 
 	cmd.command = ff.Command{
 		Name:      "delete",
@@ -40,7 +44,7 @@ func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 	return &cmd
 }
 
-func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
+func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
 	dir, err := config.RootDir()
 	if err != nil {
 		return err
@@ -52,7 +56,7 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 	}
 
 	path := filepath.Join(dir, FileFrom(del.labels))
-	if len(args) == 0 {
+	if del.pattern == "" {
 		return deleteFile(path)
 	}
 
@@ -65,7 +69,7 @@ func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 		err = errors.Join(err, fh.Close())
 	}()
 
-	newContent, err := deleteContent(fh, args[0])
+	newContent, err := deleteContent(fh, del.pattern)
 	if err != nil {
 		return err
 	}
@@ -100,13 +104,22 @@ func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
 		return nil, err
 	}
 
-	lines := FindLines(content, pattern)
-	if len(lines) == 0 {
+	ll := FindLines(content, pattern)
+	if len(ll) == 0 {
 		fmt.Println(msgDeleteEmpty)
 		return content, nil
 	}
 
-	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(lines))), os.Stdin, os.Stdout)
+	for _, l := range ll {
+		bmk, err := model.NewFromLine(string(l))
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Fprintf(os.Stdout, "%q\n", bmk.Name)
+	}
+
+	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(ll))), os.Stdin, os.Stdout)
 	if !ok {
 		return content, nil
 	}

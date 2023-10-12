@@ -16,6 +16,10 @@ type Storer interface {
 	Status() (string, error)
 }
 
+const (
+	msgNothingToSync = "Nothing to sync, there are no local changes."
+)
+
 type syncCmd struct {
 	command ff.Command
 	storer  Storer
@@ -44,8 +48,13 @@ func (sync *syncCmd) handle(context.Context, []string) error {
 	}
 
 	status, err := sync.storer.Status()
-	if err != nil || status == "" {
+	if err != nil {
 		return err
+	}
+
+	if status == "" {
+		fmt.Println(msgNothingToSync)
+		return nil
 	}
 
 	_, _ = fmt.Fprintln(os.Stdout, status)
