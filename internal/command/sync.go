@@ -17,7 +17,8 @@ type Storer interface {
 }
 
 const (
-	msgNothingToSync = "Nothing to sync, there are no local changes."
+	msgNothingToSync    = "Nothing to sync, there are no local changes."
+	msgSyncConfirmation = "Sync changes with remote?"
 )
 
 type syncCmd struct {
@@ -58,7 +59,7 @@ func (sync *syncCmd) handle(context.Context, []string) error {
 	}
 
 	_, _ = fmt.Fprintln(os.Stdout, status)
-	if ok := output.Confirmation("Sync changes with remote?", os.Stdin, os.Stdout); !ok {
+	if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout); !ok {
 		return nil
 	}
 
