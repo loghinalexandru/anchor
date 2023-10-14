@@ -3,13 +3,23 @@ package command
 import (
 	"context"
 	"errors"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/peterbourgon/ff/v4"
+)
+
+const (
+	clientTimeout = 5 * time.Second
+)
+
+var (
+	ErrInvalidArgument = errors.New("missing bookmark argument")
 )
 
 type createCmd struct {
@@ -37,8 +47,13 @@ func newCreate(rootFlags *ff.FlagSet) *createCmd {
 }
 
 func (crt *createCmd) handle(ctx context.Context, args []string) error {
+	if len(args) == 0 {
+		return ErrInvalidArgument
+	}
 
-	b, err := bookmark.New(crt.title, args[0])
+	client := &http.Client{Timeout: clientTimeout}
+	b, err := bookmark.New(crt.title, args[0], bookmark.WithClient(client))
+
 	if err != nil {
 		return err
 	}

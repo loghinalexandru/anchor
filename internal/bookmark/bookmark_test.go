@@ -1,4 +1,4 @@
-package bookmark
+package bookmark_test
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 )
 
 func TestNew(t *testing.T) {
@@ -19,13 +20,9 @@ func TestNew(t *testing.T) {
 	title := "test-title"
 	url := "https://google.com"
 
-	got, err := New(title, url)
+	got, err := bookmark.New(title, url)
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
-	}
-
-	if got.client == nil {
-		t.Error("missing http client")
 	}
 
 	if got.Name != title {
@@ -43,7 +40,7 @@ func TestNewWithInvalidURL(t *testing.T) {
 	title := "test-title"
 	url := "invalid-url"
 
-	_, err := New(title, url)
+	_, err := bookmark.New(title, url)
 	if err == nil {
 		t.Error("expected error not found")
 	}
@@ -75,17 +72,17 @@ func TestNewFromLine(t *testing.T) {
 
 	for _, c := range tsc {
 		t.Run(c.input, func(t *testing.T) {
-			bookmark, err := NewFromLine(c.input)
+			bk, err := bookmark.NewFromLine(c.input)
 			if err != nil {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(bookmark.Name, c.title) {
-				t.Error(cmp.Diff(c.title, bookmark.Name))
+			if !cmp.Equal(bk.Name, c.title) {
+				t.Error(cmp.Diff(c.title, bk.Name))
 			}
 
-			if !cmp.Equal(bookmark.URL, c.url) {
-				t.Error(cmp.Diff(c.url, bookmark.URL))
+			if !cmp.Equal(bk.URL, c.url) {
+				t.Error(cmp.Diff(c.url, bk.URL))
 			}
 		})
 	}
@@ -113,13 +110,13 @@ func TestString(t *testing.T) {
 
 	for _, c := range tsc {
 		t.Run(c.title, func(t *testing.T) {
-			bookmark, err := New(c.title, c.url)
+			bk, err := bookmark.New(c.title, c.url)
 			if err != nil {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(c.want, bookmark.String()) {
-				t.Errorf("wrong serialization: want %s , got: %s", c.want, bookmark.String())
+			if !cmp.Equal(c.want, bk.String()) {
+				t.Errorf("wrong serialization: want %s , got: %s", c.want, bk.String())
 			}
 		})
 	}
@@ -152,24 +149,23 @@ func TestTitleFromURL(t *testing.T) {
 
 	for _, c := range tcs {
 		t.Run(c.input, func(t *testing.T) {
-			bookmark, err := New("test", "https://google.com")
-			if err != nil {
-				t.Fatalf("unexpected error; got %q", err)
-			}
-
-			bookmark.client = newTestClient(func(req *http.Request) *http.Response {
+			bk, err := bookmark.New("test", "https://google.com", bookmark.WithClient(newTestClient(func(req *http.Request) *http.Response {
 				return &http.Response{
 					Body: io.NopCloser(bytes.NewBufferString(c.input)),
 				}
-			})
+			})))
 
-			err = bookmark.TitleFromURL(context.Background())
 			if err != nil {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(bookmark.Name, c.want) {
-				t.Error(cmp.Diff(c.want, bookmark.Name))
+			err = bk.TitleFromURL(context.Background())
+			if err != nil {
+				t.Fatalf("unexpected error; got %q", err)
+			}
+
+			if !cmp.Equal(bk.Name, c.want) {
+				t.Error(cmp.Diff(c.want, bk.Name))
 			}
 		})
 	}
@@ -178,29 +174,25 @@ func TestTitleFromURL(t *testing.T) {
 func TestTitleFromURLWithError(t *testing.T) {
 	t.Parallel()
 
-	bookmark, err := New("test-title", "https://google.com")
+	bk, err := bookmark.New("test-title", "https://google.com", bookmark.WithClient(newTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			Body: io.NopCloser(bytes.NewBufferString("")),
+		}
+	})))
 
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	bookmark.client = newTestClient(func(req *http.Request) *http.Response {
-		return &http.Response{
-			Body: io.NopCloser(bytes.NewBufferString("")),
-		}
-	})
+	err = bk.TitleFromURL(context.Background())
 
-	err = bookmark.TitleFromURL(context.Background())
-
-	if !errors.Is(err, ErrInvalidTitle) {
+	if !errors.Is(err, bookmark.ErrInvalidTitle) {
 		t.Errorf("unexpected error; got %q", err)
 	}
 }
 
 func TestWrite(t *testing.T) {
 	t.Parallel()
-
-	t.TempDir()
 
 	output := filepath.Join(t.TempDir(), t.Name())
 	fh, err := os.Create(output)
@@ -209,12 +201,12 @@ func TestWrite(t *testing.T) {
 	}
 
 	want := "\"test-title \\\\n test\" \"https://google.com\"\n"
-	bookmark, err := New("test-title \\n test", "https://google.com")
+	bk, err := bookmark.New("test-title \\n test", "https://google.com")
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	err = bookmark.Write(fh)
+	err = bk.Write(fh)
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}

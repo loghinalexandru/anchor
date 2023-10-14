@@ -25,17 +25,29 @@ type Bookmark struct {
 	client *http.Client
 }
 
-func New(name string, rawURL string) (*Bookmark, error) {
+func New(name string, rawURL string, opts ...func(*Bookmark)) (*Bookmark, error) {
 	_, err := url.ParseRequestURI(rawURL)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Bookmark{
+	result := &Bookmark{
 		Name:   sanitize(name),
 		URL:    rawURL,
 		client: http.DefaultClient,
-	}, nil
+	}
+
+	for _, opt := range opts {
+		opt(result)
+	}
+
+	return result, nil
+}
+
+func WithClient(client *http.Client) func(*Bookmark) {
+	return func(b *Bookmark) {
+		b.client = client
+	}
 }
 
 func NewFromLine(line string) (*Bookmark, error) {
