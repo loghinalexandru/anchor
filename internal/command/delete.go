@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
+
+	"github.com/loghinalexandru/anchor/internal/command/util/text"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/loghinalexandru/anchor/internal/command/util/label"
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/peterbourgon/ff/v4"
@@ -44,17 +46,12 @@ func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 }
 
 func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
-	dir, err := config.RootDir()
+	err = label.Validate(del.labels)
 	if err != nil {
 		return err
 	}
 
-	err = Validate(del.labels)
-	if err != nil {
-		return err
-	}
-
-	path := filepath.Join(dir, FileFrom(del.labels))
+	path := label.Filepath(del.labels)
 	if del.pattern == "" {
 		return deleteFile(path)
 	}
@@ -103,7 +100,7 @@ func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
 		return nil, err
 	}
 
-	ll := FindLines(content, pattern)
+	ll := text.FindLines(content, pattern)
 	if len(ll) == 0 {
 		fmt.Println(msgDeleteEmpty)
 		return content, nil
@@ -123,5 +120,5 @@ func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
 		return content, nil
 	}
 
-	return DeleteLines(content, pattern), nil
+	return text.DeleteLines(content, pattern), nil
 }

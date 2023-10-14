@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"regexp"
+
+	"github.com/loghinalexandru/anchor/internal/command/util/label"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/config"
@@ -73,7 +74,7 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 		labels = append(labels, node.Name)
 	}
 
-	file, err := os.OpenFile(filepath.Join(rootDir, FileFrom(labels)), os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
+	file, err := os.OpenFile(label.Filepath(labels), os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
 	if err != nil {
 		return err
 	}

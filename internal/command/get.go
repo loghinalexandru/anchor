@@ -4,12 +4,13 @@ import (
 	"context"
 	"io"
 	"os"
-	"path/filepath"
+
+	"github.com/loghinalexandru/anchor/internal/command/util/label"
+	"github.com/loghinalexandru/anchor/internal/command/util/text"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/loghinalexandru/anchor/internal/bookmark"
-	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -37,17 +38,12 @@ func newGet(rootFlags *ff.FlagSet) *getCmd {
 }
 
 func (get *getCmd) handle(_ context.Context, _ []string) error {
-	dir, err := config.RootDir()
+	err := label.Validate(get.labels)
 	if err != nil {
 		return err
 	}
 
-	err = Validate(get.labels)
-	if err != nil {
-		return err
-	}
-
-	path, err := os.Open(filepath.Join(dir, FileFrom(get.labels)))
+	path, err := os.Open(label.Filepath(get.labels))
 	if err != nil {
 		return err
 	}
@@ -58,7 +54,7 @@ func (get *getCmd) handle(_ context.Context, _ []string) error {
 	}
 
 	_ = path.Close()
-	match := FindLines(content, "")
+	match := text.FindLines(content, "")
 	bookmarks := make([]list.Item, len(match))
 
 	for i, l := range match {

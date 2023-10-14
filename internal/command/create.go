@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path/filepath"
+
+	"github.com/loghinalexandru/anchor/internal/command/util/label"
 
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/config"
@@ -36,10 +37,6 @@ func newCreate(rootFlags *ff.FlagSet) *createCmd {
 }
 
 func (crt *createCmd) handle(ctx context.Context, args []string) error {
-	dir, err := config.RootDir()
-	if err != nil {
-		return err
-	}
 
 	b, err := bookmark.New(crt.title, args[0])
 	if err != nil {
@@ -54,12 +51,12 @@ func (crt *createCmd) handle(ctx context.Context, args []string) error {
 		}
 	}
 
-	err = Validate(crt.labels)
+	err = label.Validate(crt.labels)
 	if err != nil {
 		return err
 	}
 
-	path := filepath.Join(dir, FileFrom(crt.labels))
+	path := label.Filepath(crt.labels)
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
 	if err != nil {
 		return err
