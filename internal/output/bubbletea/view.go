@@ -2,6 +2,7 @@ package bubbletea
 
 import (
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -14,6 +15,9 @@ type View struct {
 func NewView(bookmarks []list.Item) *View {
 	viewList := list.New(bookmarks, newItemDelegate(), 0, 0)
 	viewList.Title = "Bookmarks"
+	viewList.InfiniteScrolling = true
+	viewList.Paginator.Type = paginator.Arabic
+	viewList.Paginator.ArabicFormat = "%d/%d \u2693"
 	viewList.FilterInput.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
 	viewList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
 

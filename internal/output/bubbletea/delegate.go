@@ -12,23 +12,24 @@ import (
 
 func newItemDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
-	d.Styles.SelectedTitle = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
-	d.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
-
-	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
-		switch msg := msg.(type) {
-		case tea.KeyMsg:
-			switch msg.String() {
-			case "enter", " ":
-				item := m.SelectedItem().(*bookmark.Bookmark)
-				_ = open(item.URL)
-			}
-		}
-
-		return nil
-	}
+	d.Styles.SelectedTitle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.NoColor{})
+	d.Styles.SelectedDesc = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.NoColor{})
+	d.UpdateFunc = update
 
 	return d
+}
+
+func update(msg tea.Msg, m *list.Model) tea.Cmd {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter", " ":
+			item := m.SelectedItem().(*bookmark.Bookmark)
+			_ = open(item.URL)
+		}
+	}
+
+	return nil
 }
 
 func open(url string) error {
