@@ -1,6 +1,7 @@
 package label
 
 import (
+	"errors"
 	"path/filepath"
 	"testing"
 )
@@ -30,13 +31,47 @@ func TestFilename(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			got := Filepath(c.labels)
 			if c.want != filepath.Base(got) {
-				t.Errorf("unexpected filename from labels; want %q, got %q", c.want, filepath.Base(got))
+				t.Errorf("unexpected filename from label(s); want %q, got %q", c.want, filepath.Base(got))
 			}
 		})
 	}
 }
 
-func TestValidate(t *testing.T) {
+func TestValidateGoodLabels(t *testing.T) {
 	t.Parallel()
 
+	tsc := map[string][]string{
+		"empty-label":  {},
+		"single-label": {"golang"},
+		"multi-label":  {"golang", "prometheus", "1-config"},
+	}
+
+	for k, c := range tsc {
+		t.Run(k, func(t *testing.T) {
+			err := Validate(c)
+			if err != nil {
+				t.Errorf("unexpected error on valid label(s); %q", err)
+			}
+		})
+	}
+}
+
+func TestValidateBadLabels(t *testing.T) {
+	t.Parallel()
+
+	tsc := map[string][]string{
+		"empty-label":      {""},
+		"whitespace-label": {" \n"},
+		"single-label":     {".dotnet"},
+		"multi-label":      {"Golang", "#!?prometheus", "1-config"},
+	}
+
+	for k, c := range tsc {
+		t.Run(k, func(t *testing.T) {
+			err := Validate(c)
+			if !errors.Is(err, ErrInvalidLabel) {
+				t.Errorf("missing error on invalid label(s); %q", c)
+			}
+		})
+	}
 }

@@ -20,10 +20,7 @@ type GitStorage struct {
 }
 
 func NewGitStorage() (*GitStorage, error) {
-	dir, err := config.RootDir()
-	if err != nil {
-		return nil, err
-	}
+	dir := config.RootDir()
 
 	auth, err := ssh.NewSSHAgentAuth(stdUser)
 	if err != nil {

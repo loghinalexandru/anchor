@@ -64,7 +64,7 @@ func Tree(basePath string, dd []os.DirEntry) string {
 func treePrint(hierarchy []map[string]label) string {
 	var prev map[string]treeprint.Tree
 	var curr map[string]treeprint.Tree
-	tree := treeprint.NewWithRoot(config.StdDir)
+	tree := treeprint.NewWithRoot(filepath.Base(config.RootDir()))
 	for _, lvl := range hierarchy {
 		curr = make(map[string]treeprint.Tree)
 		for k, v := range lvl {

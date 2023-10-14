@@ -26,13 +26,10 @@ func Validate(labels []string) error {
 }
 
 func Filepath(labels []string) string {
-	dir, err := config.RootDir()
-	if err != nil {
-		return ""
-	}
+	rootDir := config.RootDir()
 
 	if len(labels) == 0 {
-		return filepath.Join(dir, config.StdLabel)
+		return filepath.Join(rootDir, config.StdLabel)
 	}
 
 	exp := regexp.MustCompile(config.RegexpNotLabel)
@@ -41,5 +38,5 @@ func Filepath(labels []string) string {
 	}
 
 	filename := strings.Join(labels, config.StdSeparator)
-	return filepath.Join(dir, strings.ToLower(filename))
+	return filepath.Join(rootDir, strings.ToLower(filename))
 }

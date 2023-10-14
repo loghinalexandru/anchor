@@ -38,11 +38,6 @@ func newImport(rootFlags *ff.FlagSet) *importCmd {
 }
 
 func (*importCmd) handle(_ context.Context, args []string) error {
-	dir, err := config.RootDir()
-	if err != nil {
-		return err
-	}
-
 	if len(args) == 0 {
 		return ErrInvalidImportFile
 	}
@@ -58,7 +53,7 @@ func (*importCmd) handle(_ context.Context, args []string) error {
 	}
 
 	doc, _ := netscape.Unmarshal(content)
-	err = traversal(dir, nil, doc.Root)
+	err = traversal(config.RootDir(), nil, doc.Root)
 
 	if err != nil {
 		return err

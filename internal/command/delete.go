@@ -107,12 +107,12 @@ func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
 	}
 
 	for _, l := range ll {
-		bmk, err := bookmark.NewFromLine(string(l))
+		bm, err := bookmark.NewFromLine(string(l))
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Fprintf(os.Stdout, "%q\n", bmk.Name)
+		fmt.Fprintf(os.Stdout, "%q\n", bm.Name)
 	}
 
 	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(ll))), os.Stdin, os.Stdout)

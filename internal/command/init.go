@@ -37,18 +37,13 @@ func newInit(rootFlags *ff.FlagSet) *initCmd {
 }
 
 func (init *initCmd) handle(_ context.Context, args []string) error {
-	dir, err := config.RootDir()
-	if err != nil {
-		return err
-	}
-
 	if init.repoFlag {
 		if len(args) == 0 {
 			return ErrInvalidURL
 		}
 
 		s, _ := storage.NewGitStorage()
-		err = s.CloneWithSSH(args[0])
+		err := s.CloneWithSSH(args[0])
 		if err != nil {
 			return err
 		}
@@ -56,7 +51,8 @@ func (init *initCmd) handle(_ context.Context, args []string) error {
 		return nil
 	}
 
-	if _, err = os.Stat(dir); os.IsNotExist(err) {
+	dir := config.RootDir()
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, config.StdFileMode)
 		if err != nil {
 			return err
