@@ -1,4 +1,4 @@
-package model
+package bookmark
 
 import (
 	"context"

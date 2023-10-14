@@ -8,8 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/loghinalexandru/anchor/internal/model"
-
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/peterbourgon/ff/v4"
@@ -111,7 +110,7 @@ func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
 	}
 
 	for _, l := range ll {
-		bmk, err := model.NewFromLine(string(l))
+		bmk, err := bookmark.NewFromLine(string(l))
 		if err != nil {
 			return nil, err
 		}

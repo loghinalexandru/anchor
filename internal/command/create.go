@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/config"
-	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -41,7 +41,7 @@ func (crt *createCmd) handle(ctx context.Context, args []string) error {
 		return err
 	}
 
-	b, err := model.New(crt.title, args[0])
+	b, err := bookmark.New(crt.title, args[0])
 	if err != nil {
 		return err
 	}

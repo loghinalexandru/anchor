@@ -8,8 +8,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/config"
-	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -62,7 +62,7 @@ func (get *getCmd) handle(_ context.Context, _ []string) error {
 	bookmarks := make([]list.Item, len(match))
 
 	for i, l := range match {
-		bookmarks[i], err = model.NewFromLine(string(l))
+		bookmarks[i], err = bookmark.NewFromLine(string(l))
 		if err != nil {
 			return err
 		}

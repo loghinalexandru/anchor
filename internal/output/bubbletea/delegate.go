@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/loghinalexandru/anchor/internal/model"
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 )
 
 func newItemDelegate() list.DefaultDelegate {
@@ -20,7 +20,7 @@ func newItemDelegate() list.DefaultDelegate {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "enter", " ":
-				item := m.SelectedItem().(*model.Bookmark)
+				item := m.SelectedItem().(*bookmark.Bookmark)
 				_ = open(item.URL)
 			}
 		}
