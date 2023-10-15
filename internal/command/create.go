@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	ErrInvalidArgument = errors.New("missing bookmark argument")
+	ErrInvalidArgument = errors.New("missing bookmark URL from arguments")
 )
 
 type createCmd struct {
@@ -60,7 +60,6 @@ func (crt *createCmd) handle(ctx context.Context, args []string) error {
 
 	if crt.title == "" {
 		err = b.TitleFromURL(ctx)
-
 		if err != nil {
 			return err
 		}

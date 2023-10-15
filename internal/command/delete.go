@@ -17,14 +17,14 @@ import (
 )
 
 const (
-	msgDeleteConfirmation = "You are about to delete %s. Proceed?"
-	msgDeleteEmpty        = "No match found. Skipping..."
+	msgDeleteLabel     = "You are about to delete the label and associated bookmarks. Proceed?"
+	msgDeleteBookmarks = "You are about to delete matched bookmark(s). Proceed?"
+	msgDeleteEmpty     = "No match found. Skipping..."
 )
 
 type deleteCmd struct {
 	command ff.Command
 	labels  []string
-	pattern string
 }
 
 func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
@@ -32,7 +32,6 @@ func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 
 	flags := ff.NewFlagSet("delete").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
-	_ = flags.StringVar(&cmd.pattern, 'p', "pattern", "", "delete items matching the pattern")
 
 	cmd.command = ff.Command{
 		Name:      "delete",
@@ -45,15 +44,16 @@ func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 	return &cmd
 }
 
-func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
+func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
+	path := label.Filepath(del.labels)
+
+	if len(args) == 0 {
+		return deleteFile(path)
+	}
+
 	err = label.Validate(del.labels)
 	if err != nil {
 		return err
-	}
-
-	path := label.Filepath(del.labels)
-	if del.pattern == "" {
-		return deleteFile(path)
 	}
 
 	fh, err := os.OpenFile(path, os.O_RDWR, config.StdFileMode)
@@ -65,7 +65,7 @@ func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
 		err = errors.Join(err, fh.Close())
 	}()
 
-	newContent, err := deleteContent(fh, del.pattern)
+	newContent, err := deleteContent(fh, args[0])
 	if err != nil {
 		return err
 	}
@@ -79,13 +79,14 @@ func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
 	if err != nil {
 		return err
 	}
+
 	_, err = fh.Write(newContent)
 
 	return err
 }
 
 func deleteFile(path string) error {
-	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, path), os.Stdin, os.Stdout)
+	ok := output.Confirmation(msgDeleteLabel, os.Stdin, os.Stdout)
 	if ok {
 		err := os.Remove(path)
 		return err
@@ -115,7 +116,7 @@ func deleteContent(reader io.Reader, pattern string) ([]byte, error) {
 		fmt.Fprintf(os.Stdout, "%q\n", bm.Name)
 	}
 
-	ok := output.Confirmation(fmt.Sprintf(msgDeleteConfirmation, fmt.Sprintf("%d line(s)", len(ll))), os.Stdin, os.Stdout)
+	ok := output.Confirmation(msgDeleteBookmarks, os.Stdin, os.Stdout)
 	if !ok {
 		return content, nil
 	}
