@@ -58,7 +58,7 @@ func (sync *syncCmd) handle(context.Context, []string) error {
 		return nil
 	}
 
-	_, _ = fmt.Fprintln(os.Stdout, status)
+	_, _ = fmt.Fprint(os.Stdout, status)
 	if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout); !ok {
 		return nil
 	}
