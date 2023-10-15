@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-
-	"github.com/loghinalexandru/anchor/internal/config"
 )
 
 var (
@@ -106,7 +104,7 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 		return err
 	}
 
-	exp := regexp.MustCompile(fmt.Sprintf(config.RegexpURL, regexp.QuoteMeta(b.URL)))
+	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.URL)))
 	if exp.Match(content) {
 		return fmt.Errorf("%s: %w", b.URL, ErrDuplicate)
 	}
@@ -127,18 +125,19 @@ func (b *Bookmark) FilterValue() string {
 	return b.Name
 }
 
+func sanitize(input string) string {
+	repl := strings.NewReplacer("\n", "", "\r", "", "\"", "")
+	return repl.Replace(input)
+}
+
+var titleRegexp = regexp.MustCompile(`<title>(?P<title>.+?)</title>`)
+
 func findTitle(content []byte) string {
-	titleMatch := regexp.MustCompile(`<title>(?P<title>.+?)</title>`)
-	match := titleMatch.FindSubmatch(content)
+	match := titleRegexp.FindSubmatch(content)
 
 	if len(match) == 0 {
 		return ""
 	}
 
 	return string(match[1])
-}
-
-func sanitize(input string) string {
-	repl := strings.NewReplacer("\n", "", "\r", "", "\"", "")
-	return repl.Replace(input)
 }

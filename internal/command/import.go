@@ -62,8 +62,10 @@ func (*importCmd) handle(_ context.Context, args []string) error {
 	return nil
 }
 
+var toolbarRegexp = regexp.MustCompile("(?i)bookmark|bar")
+
 func traversal(rootDir string, labels []string, node netscape.Folder) error {
-	userDefined, _ := regexp.MatchString("(?i)bookmark|bar", node.Name)
+	userDefined := toolbarRegexp.MatchString(node.Name)
 
 	if len(node.Bookmarks) > 0 && !userDefined {
 		labels = append(labels, node.Name)

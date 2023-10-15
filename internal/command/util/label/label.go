@@ -14,15 +14,17 @@ var (
 	ErrInvalidLabel = errors.New("invalid label passed")
 )
 
+var notLabelRegexp = regexp.MustCompile(`([^a-z0-9-]|^$)`)
+
 func Validate(labels []string) error {
-	exp := regexp.MustCompile(config.RegexpLabel)
+	var result error
 	for _, l := range labels {
-		if !exp.MatchString(l) {
-			return fmt.Errorf("%s: %w", l, ErrInvalidLabel)
+		if notLabelRegexp.MatchString(l) {
+			result = errors.Join(result, fmt.Errorf("%q: %w", l, ErrInvalidLabel))
 		}
 	}
 
-	return nil
+	return result
 }
 
 func Filepath(labels []string) string {
@@ -32,9 +34,8 @@ func Filepath(labels []string) string {
 		return filepath.Join(rootDir, config.StdLabel)
 	}
 
-	exp := regexp.MustCompile(config.RegexpNotLabel)
 	for i, l := range labels {
-		labels[i] = exp.ReplaceAllString(strings.ToLower(l), "")
+		labels[i] = notLabelRegexp.ReplaceAllString(strings.ToLower(l), "")
 	}
 
 	filename := strings.Join(labels, config.StdSeparator)
