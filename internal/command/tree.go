@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/loghinalexandru/anchor/internal/config"
-	"github.com/loghinalexandru/anchor/internal/output"
+	"github.com/loghinalexandru/anchor/internal/output/treeprint"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -30,11 +30,8 @@ func newTree(rootFlags *ff.FlagSet) *treeCmd {
 func (*treeCmd) handle(context.Context, []string) error {
 	dir := config.RootDir()
 
-	dd, err := os.ReadDir(dir)
-	if err != nil {
-		return err
-	}
+	dd := os.DirFS(dir)
+	fmt.Print(treeprint.Generate(dd))
 
-	fmt.Print(output.Tree(dir, dd))
 	return nil
 }

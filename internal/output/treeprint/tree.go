@@ -1,10 +1,10 @@
-package output
+package treeprint
 
 import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
@@ -21,15 +21,17 @@ type label struct {
 	lines  int
 }
 
-func Tree(basePath string, dd []os.DirEntry) string {
+func Generate(fsystem fs.FS) string {
 	var hierarchy []map[string]label
+
+	dd, _ := fs.ReadDir(fsystem, ".")
 	for _, d := range dd {
 		if d.IsDir() {
 			continue
 		}
 
 		var counter int
-		fh, err := os.Open(filepath.Join(basePath, d.Name()))
+		fh, err := fsystem.Open(d.Name())
 		if err == nil {
 			counter, _ = lineCounter(fh)
 			_ = fh.Close()
