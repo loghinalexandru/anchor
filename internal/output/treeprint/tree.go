@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/config"
@@ -66,26 +67,40 @@ func Generate(fsystem fs.FS) string {
 func treePrint(hierarchy []map[string]label) string {
 	var prev map[string]treeprint.Tree
 	var curr map[string]treeprint.Tree
+
 	tree := treeprint.NewWithRoot(filepath.Base(config.RootDir()))
 	for _, lvl := range hierarchy {
 		curr = make(map[string]treeprint.Tree)
-		for k, v := range lvl {
-			if v.parent == "" {
+		for _, k := range keys(lvl) {
+			if lvl[k].parent == "" {
 				br := tree.AddBranch(k)
 				curr[k] = br
 			} else {
-				br := prev[v.parent]
+				br := prev[lvl[k].parent]
 				curr[k] = br.AddBranch(k)
 			}
 
-			if v.lines > 0 {
-				curr[k].SetMetaValue(fmt.Sprintf(msgMetadata, v.lines))
+			if lvl[k].lines > 0 {
+				curr[k].SetMetaValue(fmt.Sprintf(msgMetadata, lvl[k].lines))
 			}
 		}
 		prev = curr
 	}
 
 	return tree.String()
+}
+
+func keys(lvl map[string]label) []string {
+	var index int
+	keys := make([]string, len(lvl))
+
+	for k, _ := range lvl {
+		keys[index] = k
+		index++
+	}
+
+	slices.Sort(keys)
+	return keys
 }
 
 func lineCounter(r io.Reader) (int, error) {
