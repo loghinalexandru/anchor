@@ -1,6 +1,7 @@
 package treeprint_test
 
 import (
+	"os"
 	"testing"
 	"testing/fstest"
 
@@ -8,10 +9,25 @@ import (
 	"github.com/loghinalexandru/anchor/internal/output/treeprint"
 )
 
-func TestGenerateNoMetadata(t *testing.T) {
+func TestGenerateEmpty(t *testing.T) {
 	t.Parallel()
 
-	want := ".anchor\n├── prometheus\n│   ├── algo\n│   └── go\n└── root\n"
+	want := ".anchor\n"
+	got := treeprint.Generate(fstest.MapFS{})
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("output not matching; (-got, +want):\n %s", diff)
+	}
+}
+
+func TestGenerateSimple(t *testing.T) {
+	t.Parallel()
+
+	want, err := os.ReadFile("testdata/simple.golden")
+	if err != nil {
+		t.Fatalf("unexpected error; got %q", err)
+	}
+
 	fs := fstest.MapFS{
 		"root":            {},
 		"prometheus.go":   {},
@@ -21,7 +37,64 @@ func TestGenerateNoMetadata(t *testing.T) {
 
 	got := treeprint.Generate(fs)
 
-	if diff := cmp.Diff(got, want); diff != "" {
+	if diff := cmp.Diff(got, string(want)); diff != "" {
+		t.Log(got)
+		t.Errorf("output not matching; (-got, +want):\n %s", diff)
+	}
+}
+
+func TestGenerateComplex(t *testing.T) {
+	t.Parallel()
+
+	want, err := os.ReadFile("testdata/complex.golden")
+	if err != nil {
+		t.Fatalf("unexpected error; got %q", err)
+	}
+
+	fs := fstest.MapFS{
+		"a":         {},
+		"a.b.c":     {},
+		"a.b.d":     {},
+		"a.c":       {},
+		"a.d.b":     {},
+		"a.d.g.f.y": {},
+		"c.b.a":     {},
+		"x.y":       {},
+	}
+
+	got := treeprint.Generate(fs)
+
+	if diff := cmp.Diff(got, string(want)); diff != "" {
+		t.Log(got)
+		t.Errorf("output not matching; (-got, +want):\n %s", diff)
+	}
+}
+
+func TestGenerateWithMetadata(t *testing.T) {
+	t.Parallel()
+
+	want, err := os.ReadFile("testdata/metadata.golden")
+	if err != nil {
+		t.Fatalf("unexpected error; got %q", err)
+	}
+
+	fs := fstest.MapFS{
+		"root": {
+			Data: []byte("first-line\nsecond-line\n"),
+		},
+		"prometheus.go": {
+			Data: []byte("first-line\n"),
+		},
+		"prometheus.algo": {
+			Data: []byte("\"first-line\nsecond-line\nthird-line\n"),
+		},
+		"prometheus": {},
+	}
+
+	got := treeprint.Generate(fs)
+
+	if diff := cmp.Diff(got, string(want)); diff != "" {
+		t.Log(got)
 		t.Errorf("output not matching; (-got, +want):\n %s", diff)
 	}
 }

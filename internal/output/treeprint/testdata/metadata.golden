@@ -1,0 +1,5 @@
+.anchor
+├── prometheus
+│   ├── [3⚓]  algo
+│   └── [1⚓]  go
+└── [2⚓]  root

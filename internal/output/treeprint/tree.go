@@ -17,22 +17,22 @@ const (
 	msgMetadata = "%d\u2693"
 )
 
-type label struct {
+type node struct {
 	parent string
 	lines  int
 }
 
-func Generate(fsystem fs.FS) string {
-	var hierarchy []map[string]label
+func Generate(fsys fs.FS) string {
+	var hierarchy []map[string]node
 
-	dd, _ := fs.ReadDir(fsystem, ".")
+	dd, _ := fs.ReadDir(fsys, ".")
 	for _, d := range dd {
 		if d.IsDir() {
 			continue
 		}
 
 		var counter int
-		fh, err := fsystem.Open(d.Name())
+		fh, err := fsys.Open(d.Name())
 		if err == nil {
 			counter, _ = lineCounter(fh)
 			_ = fh.Close()
@@ -42,18 +42,18 @@ func Generate(fsystem fs.FS) string {
 		labels = append(labels, strings.Split(d.Name(), config.StdSeparator)...)
 		for i, l := range labels[1:] {
 			if len(hierarchy) <= i {
-				hierarchy = append(hierarchy, map[string]label{})
+				hierarchy = append(hierarchy, map[string]node{})
 			}
 
 			switch i {
 			case len(labels) - 2:
-				hierarchy[i][l] = label{
+				hierarchy[i][l] = node{
 					parent: labels[i],
 					lines:  counter,
 				}
 			default:
 				if _, ok := hierarchy[i][l]; !ok {
-					hierarchy[i][l] = label{
+					hierarchy[i][l] = node{
 						parent: labels[i],
 					}
 				}
@@ -64,7 +64,7 @@ func Generate(fsystem fs.FS) string {
 	return treePrint(hierarchy)
 }
 
-func treePrint(hierarchy []map[string]label) string {
+func treePrint(hierarchy []map[string]node) string {
 	var prev map[string]treeprint.Tree
 	var curr map[string]treeprint.Tree
 
@@ -90,11 +90,11 @@ func treePrint(hierarchy []map[string]label) string {
 	return tree.String()
 }
 
-func keys(lvl map[string]label) []string {
+func keys(lvl map[string]node) []string {
 	var index int
 	keys := make([]string, len(lvl))
 
-	for k, _ := range lvl {
+	for k := range lvl {
 		keys[index] = k
 		index++
 	}
