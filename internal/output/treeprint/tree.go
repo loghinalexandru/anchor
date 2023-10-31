@@ -26,32 +26,36 @@ func Generate(fsys fs.FS) string {
 			continue
 		}
 
-		var lines int
+		var lineCount int
 		f, err := fsys.Open(d.Name())
 		if err == nil {
-			lines = lineCounter(f)
+			lineCount = lineCounter(f)
 			f.Close()
 		}
 
 		labels := strings.Split(d.Name(), config.StdSeparator)
 		if _, ok := known[labels[0]]; !ok {
-			known[labels[0]] = tree.AddMetaBranch(fmt.Sprintf(msgMetadata, lines), labels[0])
+			known[labels[0]] = branch(tree, lineCount, labels[0], len(labels) == 1)
 		}
 
 		for i := 1; i < len(labels); i++ {
 			curr := strings.Join(labels[:i+1], config.StdSeparator)
 			if _, ok := known[curr]; !ok {
 				prev := strings.Join(labels[:i], config.StdSeparator)
-				if i == len(labels)-1 {
-					known[curr] = known[prev].AddMetaBranch(fmt.Sprintf(msgMetadata, lines), labels[i])
-				} else {
-					known[curr] = known[prev].AddBranch(labels[i])
-				}
+				known[curr] = branch(known[prev], lineCount, labels[i], i == len(labels)-1)
 			}
 		}
 	}
 
 	return tree.String()
+}
+
+func branch(root treeprint.Tree, lineCount int, label string, leaf bool) treeprint.Tree {
+	if leaf {
+		return root.AddMetaBranch(fmt.Sprintf(msgMetadata, lineCount), label)
+	}
+
+	return root.AddBranch(label)
 }
 
 func lineCounter(r io.Reader) int {

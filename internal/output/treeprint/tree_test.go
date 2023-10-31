@@ -1,6 +1,7 @@
 package treeprint_test
 
 import (
+	"io/fs"
 	"os"
 	"testing"
 	"testing/fstest"
@@ -8,6 +9,21 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/loghinalexandru/anchor/internal/output/treeprint"
 )
+
+func TestGenerateWithDir(t *testing.T) {
+	t.Parallel()
+
+	want := ".anchor\n"
+	got := treeprint.Generate(fstest.MapFS{
+		"git": {
+			Mode: fs.ModeDir,
+		},
+	})
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("output not matching; (-got, +want):\n %s", diff)
+	}
+}
 
 func TestGenerateEmpty(t *testing.T) {
 	t.Parallel()
@@ -28,14 +44,14 @@ func TestGenerateSimple(t *testing.T) {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	fs := fstest.MapFS{
+	fsys := fstest.MapFS{
 		"root":            {},
 		"prometheus.algo": {},
 		"prometheus":      {},
 		"prometheus.go":   {},
 	}
 
-	got := treeprint.Generate(fs)
+	got := treeprint.Generate(fsys)
 
 	if diff := cmp.Diff(got, string(want)); diff != "" {
 		t.Log(got)
@@ -51,7 +67,7 @@ func TestGenerateComplex(t *testing.T) {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	fs := fstest.MapFS{
+	fsys := fstest.MapFS{
 		"a":         {},
 		"a.b.c":     {},
 		"a.b.d":     {},
@@ -62,7 +78,7 @@ func TestGenerateComplex(t *testing.T) {
 		"x.y":       {},
 	}
 
-	got := treeprint.Generate(fs)
+	got := treeprint.Generate(fsys)
 
 	if diff := cmp.Diff(got, string(want)); diff != "" {
 		t.Log(got)
@@ -78,7 +94,7 @@ func TestGenerateWithMetadata(t *testing.T) {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	fs := fstest.MapFS{
+	fsys := fstest.MapFS{
 		"root": {
 			Data: []byte("first-line\nsecond-line\n"),
 		},
@@ -91,7 +107,7 @@ func TestGenerateWithMetadata(t *testing.T) {
 		"prometheus": {},
 	}
 
-	got := treeprint.Generate(fs)
+	got := treeprint.Generate(fsys)
 
 	if diff := cmp.Diff(got, string(want)); diff != "" {
 		t.Log(got)
