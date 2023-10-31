@@ -1,5 +1,5 @@
 .anchor
-├── prometheus
-│   ├── algo
-│   └── go
-└── root
+├── [0⚓]  prometheus
+│   ├── [0⚓]  algo
+│   └── [0⚓]  go
+└── [0⚓]  root

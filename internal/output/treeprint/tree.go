@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/config"
@@ -17,13 +16,9 @@ const (
 	msgMetadata = "%d\u2693"
 )
 
-type node struct {
-	parent string
-	lines  int
-}
-
 func Generate(fsys fs.FS) string {
-	var hierarchy []map[string]node
+	known := map[string]treeprint.Tree{}
+	tree := treeprint.NewWithRoot(filepath.Base(config.RootDir()))
 
 	dd, _ := fs.ReadDir(fsys, ".")
 	for _, d := range dd {
@@ -31,79 +26,35 @@ func Generate(fsys fs.FS) string {
 			continue
 		}
 
-		var counter int
-		fh, err := fsys.Open(d.Name())
+		var lines int
+		f, err := fsys.Open(d.Name())
 		if err == nil {
-			counter, _ = lineCounter(fh)
-			_ = fh.Close()
+			lines = lineCounter(f)
+			f.Close()
 		}
 
-		labels := []string{""}
-		labels = append(labels, strings.Split(d.Name(), config.StdSeparator)...)
-		for i, l := range labels[1:] {
-			if len(hierarchy) <= i {
-				hierarchy = append(hierarchy, map[string]node{})
-			}
+		labels := strings.Split(d.Name(), config.StdSeparator)
+		if _, ok := known[labels[0]]; !ok {
+			known[labels[0]] = tree.AddMetaBranch(fmt.Sprintf(msgMetadata, lines), labels[0])
+		}
 
-			switch i {
-			case len(labels) - 2:
-				hierarchy[i][l] = node{
-					parent: labels[i],
-					lines:  counter,
-				}
-			default:
-				if _, ok := hierarchy[i][l]; !ok {
-					hierarchy[i][l] = node{
-						parent: labels[i],
-					}
+		for i := 1; i < len(labels); i++ {
+			curr := strings.Join(labels[:i+1], config.StdSeparator)
+			if _, ok := known[curr]; !ok {
+				prev := strings.Join(labels[:i], config.StdSeparator)
+				if i == len(labels)-1 {
+					known[curr] = known[prev].AddMetaBranch(fmt.Sprintf(msgMetadata, lines), labels[i])
+				} else {
+					known[curr] = known[prev].AddBranch(labels[i])
 				}
 			}
 		}
-	}
-
-	return treePrint(hierarchy)
-}
-
-func treePrint(hierarchy []map[string]node) string {
-	var prev map[string]treeprint.Tree
-	var curr map[string]treeprint.Tree
-
-	tree := treeprint.NewWithRoot(filepath.Base(config.RootDir()))
-	for _, lvl := range hierarchy {
-		curr = make(map[string]treeprint.Tree)
-		for _, k := range keys(lvl) {
-			if lvl[k].parent == "" {
-				br := tree.AddBranch(k)
-				curr[k] = br
-			} else {
-				br := prev[lvl[k].parent]
-				curr[k] = br.AddBranch(k)
-			}
-
-			if lvl[k].lines > 0 {
-				curr[k].SetMetaValue(fmt.Sprintf(msgMetadata, lvl[k].lines))
-			}
-		}
-		prev = curr
 	}
 
 	return tree.String()
 }
 
-func keys(lvl map[string]node) []string {
-	var index int
-	keys := make([]string, len(lvl))
-
-	for k := range lvl {
-		keys[index] = k
-		index++
-	}
-
-	slices.Sort(keys)
-	return keys
-}
-
-func lineCounter(r io.Reader) (int, error) {
+func lineCounter(r io.Reader) int {
 	var res int
 	buf := make([]byte, 32*1024)
 	lineSep := []byte{'\n'}
@@ -114,9 +65,9 @@ func lineCounter(r io.Reader) (int, error) {
 
 		switch {
 		case err == io.EOF:
-			return res, nil
+			return res
 		case err != nil:
-			return res, err
+			return res
 		}
 	}
 }

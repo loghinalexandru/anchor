@@ -30,9 +30,9 @@ func TestGenerateSimple(t *testing.T) {
 
 	fs := fstest.MapFS{
 		"root":            {},
-		"prometheus.go":   {},
 		"prometheus.algo": {},
 		"prometheus":      {},
+		"prometheus.go":   {},
 	}
 
 	got := treeprint.Generate(fs)
