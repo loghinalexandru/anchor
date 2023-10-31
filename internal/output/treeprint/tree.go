@@ -63,10 +63,7 @@ func lineCounter(r io.Reader) int {
 		c, err := r.Read(buf)
 		res += bytes.Count(buf[:c], lineSep)
 
-		switch {
-		case err == io.EOF:
-			return res
-		case err != nil:
+		if err != nil {
 			return res
 		}
 	}
