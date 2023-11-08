@@ -10,10 +10,16 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
+type Differ interface {
+	Diff() (string, error)
+}
+
+type Updater interface {
+	Update() error
+}
+
 type Storer interface {
-	Read() error
-	Write() error
-	Status() (string, error)
+	Store() error
 }
 
 const (
@@ -43,27 +49,31 @@ func newSync(rootFlags *ff.FlagSet) *syncCmd {
 }
 
 func (sync *syncCmd) handle(context.Context, []string) error {
-	err := sync.storer.Read()
-	if err != nil {
-		return err
+	if u, ok := sync.storer.(Updater); ok {
+		err := u.Update()
+		if err != nil {
+			return err
+		}
 	}
 
-	status, err := sync.storer.Status()
-	if err != nil {
-		return err
+	if d, ok := sync.storer.(Differ); ok {
+		status, err := d.Diff()
+		if err != nil {
+			return err
+		}
+
+		if status == "" {
+			fmt.Println(msgNothingToSync)
+			return nil
+		}
+
+		_, _ = fmt.Fprint(os.Stdout, status)
+		if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout); !ok {
+			return nil
+		}
 	}
 
-	if status == "" {
-		fmt.Println(msgNothingToSync)
-		return nil
-	}
-
-	_, _ = fmt.Fprint(os.Stdout, status)
-	if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout); !ok {
-		return nil
-	}
-
-	err = sync.storer.Write()
+	err := sync.storer.Store()
 	if err != nil {
 		return err
 	}

@@ -42,7 +42,7 @@ func (storage *GitStorage) CloneWithSSH(remote string) error {
 	return err
 }
 
-func (storage *GitStorage) Read() error {
+func (storage *GitStorage) Update() error {
 	repo, err := git.PlainOpen(storage.path)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (storage *GitStorage) Read() error {
 	return nil
 }
 
-func (storage *GitStorage) Write() error {
+func (storage *GitStorage) Store() error {
 	repo, err := git.PlainOpen(storage.path)
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func (storage *GitStorage) Write() error {
 	return err
 }
 
-func (storage *GitStorage) Status() (string, error) {
+func (storage *GitStorage) Diff() (string, error) {
 	repo, err := git.PlainOpen(storage.path)
 	if err != nil {
 		return "", err
