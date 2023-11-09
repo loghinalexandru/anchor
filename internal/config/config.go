@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	StdFileMode  = os.FileMode(0o744)
+	StdFileMode  = os.FileMode(0o666)
 	StdLabel     = "root"
 	StdSeparator = "."
 )

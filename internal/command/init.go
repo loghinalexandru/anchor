@@ -53,7 +53,7 @@ func (init *initCmd) handle(_ context.Context, args []string) error {
 
 	dir := config.RootDir()
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, config.StdFileMode)
+		err = os.Mkdir(dir, os.ModePerm)
 		if err != nil {
 			return err
 		}
