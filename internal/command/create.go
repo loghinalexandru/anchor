@@ -29,7 +29,7 @@ type createCmd struct {
 }
 
 func newCreate(rootFlags *ff.FlagSet) *createCmd {
-	cmd := createCmd{}
+	var cmd createCmd
 
 	flags := ff.NewFlagSet("create").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add labels in order of appearance")

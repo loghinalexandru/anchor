@@ -20,7 +20,7 @@ type initCmd struct {
 }
 
 func newInit(rootFlags *ff.FlagSet) *initCmd {
-	cmd := initCmd{}
+	var cmd initCmd
 
 	flags := ff.NewFlagSet("init").SetParent(rootFlags)
 	_ = flags.BoolVar(&cmd.repoFlag, 'r', "repository", "used in order to init a git repository")

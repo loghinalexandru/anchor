@@ -58,11 +58,11 @@ func (storage *GitStorage) Update() error {
 		Auth:       storage.auth,
 	})
 
-	if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
-		return err
+	if errors.Is(err, git.NoErrAlreadyUpToDate) {
+		return nil
 	}
 
-	return nil
+	return err
 }
 
 func (storage *GitStorage) Store() error {

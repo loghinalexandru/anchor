@@ -21,7 +21,7 @@ type getCmd struct {
 }
 
 func newGet(rootFlags *ff.FlagSet) *getCmd {
-	cmd := getCmd{}
+	var cmd getCmd
 
 	flags := ff.NewFlagSet("get").SetParent(rootFlags)
 	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy")
