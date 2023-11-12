@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/loghinalexandru/anchor/internal/output"
+	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -18,16 +19,12 @@ type Differ interface {
 	Diff() (string, error)
 }
 
-type Storer interface {
-	Store() error
-}
-
 type syncCmd struct {
 	command ff.Command
-	storer  Storer
+	storer  storage.Storer
 }
 
-func newSync(rootFlags *ff.FlagSet, storer Storer) *syncCmd {
+func newSync(rootFlags *ff.FlagSet) *syncCmd {
 	var cmd syncCmd
 
 	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
@@ -38,9 +35,12 @@ func newSync(rootFlags *ff.FlagSet, storer Storer) *syncCmd {
 		Flags:     flags,
 		Exec:      cmd.handle,
 	}
-	cmd.storer = storer
 
 	return &cmd
+}
+
+func (sync *syncCmd) withStorage(storer storage.Storer) {
+	sync.storer = storer
 }
 
 func (sync *syncCmd) handle(context.Context, []string) error {

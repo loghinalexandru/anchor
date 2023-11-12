@@ -5,12 +5,11 @@ import (
 	"io"
 	"os"
 
-	"github.com/loghinalexandru/anchor/internal/command/util/label"
-	"github.com/loghinalexandru/anchor/internal/command/util/text"
-
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/loghinalexandru/anchor/internal/command/util/label"
+	"github.com/loghinalexandru/anchor/internal/command/util/text"
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
 	"github.com/peterbourgon/ff/v4"
 )

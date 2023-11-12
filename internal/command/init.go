@@ -2,28 +2,22 @@ package command
 
 import (
 	"context"
-	"errors"
-	"os"
 
-	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
-)
-
-var (
-	ErrInvalidURL = errors.New("not a valid URL")
 )
 
 type initCmd struct {
 	command  ff.Command
 	repoFlag bool
+	storer   storage.Storer
 }
 
 func newInit(rootFlags *ff.FlagSet) *initCmd {
 	var cmd initCmd
 
 	flags := ff.NewFlagSet("init").SetParent(rootFlags)
-	_ = flags.BoolVar(&cmd.repoFlag, 'r', "repository", "used in order to init a git repository")
+	_ = flags.BoolVar(&cmd.repoFlag, 'r', "repository", "used in order to init the storage")
 
 	cmd.command = ff.Command{
 		Name:      "init",
@@ -36,28 +30,10 @@ func newInit(rootFlags *ff.FlagSet) *initCmd {
 	return &cmd
 }
 
+func (init *initCmd) withStorage(storer storage.Storer) {
+	init.storer = storer
+}
+
 func (init *initCmd) handle(_ context.Context, args []string) error {
-	if init.repoFlag {
-		if len(args) == 0 {
-			return ErrInvalidURL
-		}
-
-		s, _ := storage.NewGitStorage()
-		err := s.CloneWithSSH(args[0])
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	dir := config.RootDir()
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return init.storer.Init(args[0])
 }

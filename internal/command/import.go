@@ -8,9 +8,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/loghinalexandru/anchor/internal/command/util/label"
-
 	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/loghinalexandru/anchor/internal/command/util/label"
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/peterbourgon/ff/v4"
 	"github.com/virtualtam/netscape-go/v2"

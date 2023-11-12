@@ -7,9 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/loghinalexandru/anchor/internal/command/util/label"
-
 	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/loghinalexandru/anchor/internal/command/util/label"
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/peterbourgon/ff/v4"
 )

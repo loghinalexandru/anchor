@@ -2,10 +2,15 @@ package config
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 )
 
 type pathFunc func() (string, error)
+
+func FilePath() string {
+	return path.Join(RootDir(), StdConfigFile)
+}
 
 func RootDir(ff ...pathFunc) string {
 	ff = append(ff, stdDir)
@@ -25,5 +30,5 @@ func stdDir() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(home, ".anchor"), nil
+	return filepath.Join(home, StdDir), nil
 }

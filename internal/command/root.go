@@ -4,9 +4,11 @@ import (
 	"context"
 	"os"
 
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
+	"github.com/peterbourgon/ff/v4/ffyaml"
 )
 
 var (
@@ -17,32 +19,64 @@ type Updater interface {
 	Update() error
 }
 
-func newRoot() *ff.Command {
-	store, _ := storage.NewGitStorage()
+type rootCmd struct {
+	cmd     ff.Command
+	storage string
+}
+
+type handlerFunc func(ctx context.Context, args []string) error
+
+func newRoot() *rootCmd {
+	var root rootCmd
 
 	rootFlags := ff.NewFlagSet("anchor")
-	root := &ff.Command{
+	_ = rootFlags.StringVar(&root.storage, 's', "storage", "local", "Set storage type")
+
+	root.cmd = ff.Command{
 		Name:  "anchor",
 		Usage: "anchor [FLAGS] <SUBCOMMAND>",
 		Flags: rootFlags,
 	}
 
-	root.Subcommands = append(root.Subcommands, &newCreate(rootFlags).command)
-	root.Subcommands = append(root.Subcommands, &newInit(rootFlags).command)
-	root.Subcommands = append(root.Subcommands, &newGet(rootFlags).command)
-	root.Subcommands = append(root.Subcommands, &newDelete(rootFlags).command)
-	root.Subcommands = append(root.Subcommands, &newSync(rootFlags, store).command)
-	root.Subcommands = append(root.Subcommands, (*ff.Command)(newImport(rootFlags)))
-	root.Subcommands = append(root.Subcommands, (*ff.Command)(newTree(rootFlags)))
-
-	for _, c := range root.Subcommands {
-		c.Exec = updaterMiddleware(contextHandlerMiddleware(c.Exec), store)
-	}
-
-	return root
+	return &root
 }
 
-type handlerFunc func(ctx context.Context, args []string) error
+func (root *rootCmd) bootstrap(args []string) error {
+	flags := root.cmd.Flags.(*ff.FlagSet)
+	initCmd := newInit(flags)
+	syncCmd := newSync(flags)
+
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &newCreate(flags).command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &initCmd.command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &newGet(flags).command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &newDelete(flags).command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &syncCmd.command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, (*ff.Command)(newImport(flags)))
+	root.cmd.Subcommands = append(root.cmd.Subcommands, (*ff.Command)(newTree(flags)))
+
+	err := root.cmd.Parse(args, ff.WithConfigFile(config.FilePath()), ff.WithConfigFileParser(ffyaml.Parse))
+	if err != nil {
+		return err
+	}
+
+	store, err := storage.New(root.storage)
+	if err != nil {
+		return err
+	}
+
+	initCmd.withStorage(store)
+	syncCmd.withStorage(store)
+
+	for _, c := range root.cmd.Subcommands {
+		if updater, ok := store.(Updater); ok {
+			c.Exec = updaterMiddleware(c.Exec, updater)
+		}
+
+		c.Exec = contextHandlerMiddleware(c.Exec)
+	}
+
+	return nil
+}
 
 func updaterMiddleware(next handlerFunc, updater Updater) handlerFunc {
 	return func(ctx context.Context, args []string) error {

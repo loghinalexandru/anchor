@@ -33,7 +33,7 @@ func NewGitStorage() (*GitStorage, error) {
 	}, nil
 }
 
-func (storage *GitStorage) CloneWithSSH(remote string) error {
+func (storage *GitStorage) Init(remote string) error {
 	_, err := git.PlainClone(storage.path, false, &git.CloneOptions{
 		URL:  remote,
 		Auth: storage.auth,

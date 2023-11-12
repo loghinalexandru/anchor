@@ -7,10 +7,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/loghinalexandru/anchor/internal/command/util/text"
-
 	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
+	"github.com/loghinalexandru/anchor/internal/command/util/text"
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/peterbourgon/ff/v4"
