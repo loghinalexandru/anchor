@@ -14,6 +14,10 @@ const (
 	msgCommit = "Sync bookmarks"
 )
 
+var (
+	ErrInvalidURL = errors.New("not a valid URL")
+)
+
 type gitStorage struct {
 	path string
 	auth transport.AuthMethod
@@ -33,9 +37,13 @@ func newGitStorage() (*gitStorage, error) {
 	}, nil
 }
 
-func (storage *gitStorage) Init(remote string) error {
+func (storage *gitStorage) Init(args ...string) error {
+	if len(args) == 0 {
+		return ErrInvalidURL
+	}
+
 	_, err := git.PlainClone(storage.path, false, &git.CloneOptions{
-		URL:  remote,
+		URL:  args[0],
 		Auth: storage.auth,
 	})
 

@@ -10,7 +10,7 @@ const (
 )
 
 type Storer interface {
-	Init(remote string) error
+	Init(args ...string) error
 	Store() error
 }
 

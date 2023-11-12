@@ -16,7 +16,7 @@ func newLocalStorage() *localStorage {
 	}
 }
 
-func (*localStorage) Init(_ string) error {
+func (*localStorage) Init(_ ...string) error {
 	dir := config.RootDir()
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, os.ModePerm)

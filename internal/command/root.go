@@ -49,10 +49,10 @@ func (root *rootCmd) bootstrap(args []string) error {
 
 	flags := root.cmd.Flags.(*ff.FlagSet)
 	root.cmd.Subcommands = append(root.cmd.Subcommands, &newCreate(flags).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &newInit(flags, storer).command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &newInit(flags, &storer).command)
 	root.cmd.Subcommands = append(root.cmd.Subcommands, &newGet(flags).command)
 	root.cmd.Subcommands = append(root.cmd.Subcommands, &newDelete(flags).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &newSync(flags, storer).command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &newSync(flags, &storer).command)
 	root.cmd.Subcommands = append(root.cmd.Subcommands, (*ff.Command)(newImport(flags)))
 	root.cmd.Subcommands = append(root.cmd.Subcommands, (*ff.Command)(newTree(flags)))
 

@@ -21,10 +21,10 @@ type Differ interface {
 
 type syncCmd struct {
 	command ff.Command
-	storer  storage.Storer
+	storer  *storage.Storer
 }
 
-func newSync(rootFlags *ff.FlagSet, storer storage.Storer) *syncCmd {
+func newSync(rootFlags *ff.FlagSet, storer *storage.Storer) *syncCmd {
 	var cmd syncCmd
 
 	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
@@ -41,7 +41,7 @@ func newSync(rootFlags *ff.FlagSet, storer storage.Storer) *syncCmd {
 }
 
 func (sync *syncCmd) handle(context.Context, []string) error {
-	if d, ok := sync.storer.(Differ); ok {
+	if d, ok := (*sync.storer).(Differ); ok {
 		status, err := d.Diff()
 		if err != nil {
 			return err
@@ -59,5 +59,5 @@ func (sync *syncCmd) handle(context.Context, []string) error {
 		return nil
 	}
 
-	return sync.storer.Store()
+	return (*sync.storer).Store()
 }
