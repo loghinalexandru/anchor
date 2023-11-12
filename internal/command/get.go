@@ -36,6 +36,10 @@ func newGet(rootFlags *ff.FlagSet) *getCmd {
 	return &cmd
 }
 
+func (get *getCmd) def() *ff.Command {
+	return &get.command
+}
+
 func (get *getCmd) handle(_ context.Context, _ []string) error {
 	err := label.Validate(get.labels)
 	if err != nil {

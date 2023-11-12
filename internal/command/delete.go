@@ -43,6 +43,10 @@ func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
 	return &cmd
 }
 
+func (del *deleteCmd) def() *ff.Command {
+	return &del.command
+}
+
 func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {
 	path := label.Filepath(del.labels)
 

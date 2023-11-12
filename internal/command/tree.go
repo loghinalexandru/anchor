@@ -27,6 +27,10 @@ func newTree(rootFlags *ff.FlagSet) *treeCmd {
 	return cmd
 }
 
+func (tree *treeCmd) def() *ff.Command {
+	return (*ff.Command)(tree)
+}
+
 func (*treeCmd) handle(context.Context, []string) error {
 	dir := config.RootDir()
 

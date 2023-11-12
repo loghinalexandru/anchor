@@ -14,12 +14,16 @@ type Storer interface {
 	Store() error
 }
 
-func New(k Kind) (Storer, error) {
+func New(k Kind) Storer {
 	switch k {
 	case Git:
-		return newGitStorage()
+		storer, err := newGitStorage()
+		if err != nil {
+			panic(err)
+		}
+		return storer
 	default:
-		return newLocalStorage(), nil
+		return newLocalStorage()
 	}
 }
 

@@ -9,10 +9,10 @@ import (
 
 type initCmd struct {
 	command ff.Command
-	storer  *storage.Storer
+	storer  storage.Storer
 }
 
-func newInit(rootFlags *ff.FlagSet, storer *storage.Storer) *initCmd {
+func newInit(rootFlags *ff.FlagSet) *initCmd {
 	var cmd initCmd
 
 	cmd.command = ff.Command{
@@ -22,11 +22,19 @@ func newInit(rootFlags *ff.FlagSet, storer *storage.Storer) *initCmd {
 		Flags:     ff.NewFlagSet("init").SetParent(rootFlags),
 		Exec:      cmd.handle,
 	}
-	cmd.storer = storer
+	cmd.storer = storage.New(storage.Local)
 
 	return &cmd
 }
 
+func (init *initCmd) withStorage(storer storage.Storer) {
+	init.storer = storer
+}
+
+func (init *initCmd) def() *ff.Command {
+	return &init.command
+}
+
 func (init *initCmd) handle(_ context.Context, args []string) error {
-	return (*init.storer).Init(args...)
+	return init.storer.Init(args...)
 }

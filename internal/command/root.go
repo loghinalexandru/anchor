@@ -19,6 +19,11 @@ type Updater interface {
 	Update() error
 }
 
+type command interface {
+	def() *ff.Command
+	handle(context.Context, []string) error
+}
+
 type rootCmd struct {
 	cmd     ff.Command
 	storage storage.Kind
@@ -33,7 +38,7 @@ func newRoot() *rootCmd {
 	rootFlags.Func('s', "storage", func(flag string) error {
 		root.storage = storage.Parse(flag)
 		return nil
-	}, "Set storage type")
+	}, "Set storage type (default: local)")
 
 	root.cmd = ff.Command{
 		Name:  "anchor",
@@ -45,33 +50,43 @@ func newRoot() *rootCmd {
 }
 
 func (root *rootCmd) bootstrap(args []string) error {
-	var storer storage.Storer
-
 	flags := root.cmd.Flags.(*ff.FlagSet)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &newCreate(flags).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &newInit(flags, &storer).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &newGet(flags).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &newDelete(flags).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &newSync(flags, &storer).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, (*ff.Command)(newImport(flags)))
-	root.cmd.Subcommands = append(root.cmd.Subcommands, (*ff.Command)(newTree(flags)))
 
-	err := root.cmd.Parse(args, ff.WithConfigFile(config.FilePath()), ff.WithConfigFileParser(ffyaml.Parse))
+	subcommands := []command{
+		newCreate(flags),
+		newInit(flags),
+		newGet(flags),
+		newDelete(flags),
+		newSync(flags),
+		newImport(flags),
+		newTree(flags),
+	}
+
+	root.cmd.Subcommands = make([]*ff.Command, len(subcommands))
+	for i, cm := range subcommands {
+		root.cmd.Subcommands[i] = cm.def()
+	}
+
+	err := root.cmd.Parse(args,
+		ff.WithConfigFile(config.FilePath()),
+		ff.WithConfigFileParser(ffyaml.Parse),
+		ff.WithConfigAllowMissingFile())
+
 	if err != nil {
 		return err
 	}
 
-	storer, err = storage.New(root.storage)
-	if err != nil {
-		return err
-	}
-
-	for _, c := range root.cmd.Subcommands {
-		if updater, ok := storer.(Updater); ok {
-			c.Exec = updaterMiddleware(c.Exec, updater)
+	storer := storage.New(root.storage)
+	for _, c := range subcommands {
+		if setter, ok := c.(interface{ withStorage(storage.Storer) }); ok {
+			setter.withStorage(storer)
 		}
 
-		c.Exec = contextHandlerMiddleware(c.Exec)
+		if updater, ok := storer.(Updater); ok {
+			c.def().Exec = updaterMiddleware(c.def().Exec, updater)
+		}
+
+		c.def().Exec = contextHandlerMiddleware(c.def().Exec)
 	}
 
 	return nil

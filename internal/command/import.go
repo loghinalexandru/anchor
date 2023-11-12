@@ -36,6 +36,10 @@ func newImport(rootFlags *ff.FlagSet) *importCmd {
 	return &cmd
 }
 
+func (imp *importCmd) def() *ff.Command {
+	return (*ff.Command)(imp)
+}
+
 func (*importCmd) handle(_ context.Context, args []string) error {
 	if len(args) == 0 {
 		return ErrInvalidImportFile

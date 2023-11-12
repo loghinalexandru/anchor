@@ -45,6 +45,10 @@ func newCreate(rootFlags *ff.FlagSet) *createCmd {
 	return &cmd
 }
 
+func (crt *createCmd) def() *ff.Command {
+	return &crt.command
+}
+
 func (crt *createCmd) handle(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		return ErrInvalidArgument
