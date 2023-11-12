@@ -8,8 +8,8 @@ type Storer interface {
 func New(kind string) (Storer, error) {
 	switch kind {
 	case "git":
-		return NewGitStorage()
+		return newGitStorage()
 	default:
-		return NewLocalStorage(), nil
+		return newLocalStorage(), nil
 	}
 }

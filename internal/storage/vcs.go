@@ -14,12 +14,12 @@ const (
 	msgCommit = "Sync bookmarks"
 )
 
-type GitStorage struct {
+type gitStorage struct {
 	path string
 	auth transport.AuthMethod
 }
 
-func NewGitStorage() (*GitStorage, error) {
+func newGitStorage() (*gitStorage, error) {
 	dir := config.RootDir()
 
 	auth, err := ssh.NewSSHAgentAuth(stdUser)
@@ -27,13 +27,13 @@ func NewGitStorage() (*GitStorage, error) {
 		return nil, err
 	}
 
-	return &GitStorage{
+	return &gitStorage{
 		path: dir,
 		auth: auth,
 	}, nil
 }
 
-func (storage *GitStorage) Init(remote string) error {
+func (storage *gitStorage) Init(remote string) error {
 	_, err := git.PlainClone(storage.path, false, &git.CloneOptions{
 		URL:  remote,
 		Auth: storage.auth,
@@ -42,7 +42,7 @@ func (storage *GitStorage) Init(remote string) error {
 	return err
 }
 
-func (storage *GitStorage) Update() error {
+func (storage *gitStorage) Update() error {
 	repo, err := git.PlainOpen(storage.path)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (storage *GitStorage) Update() error {
 	return err
 }
 
-func (storage *GitStorage) Store() error {
+func (storage *gitStorage) Store() error {
 	repo, err := git.PlainOpen(storage.path)
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func (storage *GitStorage) Store() error {
 	return err
 }
 
-func (storage *GitStorage) Diff() (string, error) {
+func (storage *gitStorage) Diff() (string, error) {
 	repo, err := git.PlainOpen(storage.path)
 	if err != nil {
 		return "", err

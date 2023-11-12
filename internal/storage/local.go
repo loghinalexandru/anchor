@@ -6,17 +6,17 @@ import (
 	"github.com/loghinalexandru/anchor/internal/config"
 )
 
-type LocalStorage struct {
+type localStorage struct {
 	path string
 }
 
-func NewLocalStorage() *LocalStorage {
-	return &LocalStorage{
+func newLocalStorage() *localStorage {
+	return &localStorage{
 		path: config.RootDir(),
 	}
 }
 
-func (*LocalStorage) Init(_ string) error {
+func (*localStorage) Init(_ string) error {
 	dir := config.RootDir()
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, os.ModePerm)
@@ -28,10 +28,10 @@ func (*LocalStorage) Init(_ string) error {
 	return nil
 }
 
-func (*LocalStorage) Update() error {
+func (*localStorage) Update() error {
 	return nil
 }
 
-func (*LocalStorage) Store() error {
+func (*localStorage) Store() error {
 	return nil
 }

@@ -56,15 +56,11 @@ func (sync *syncCmd) handle(context.Context, []string) error {
 		}
 
 		_, _ = fmt.Fprint(os.Stdout, status)
-		if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout); !ok {
-			return nil
-		}
 	}
 
-	err := sync.storer.Store()
-	if err != nil {
-		return err
+	if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout); !ok {
+		return nil
 	}
 
-	return nil
+	return sync.storer.Store()
 }
