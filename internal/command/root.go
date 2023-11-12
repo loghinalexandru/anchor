@@ -21,7 +21,7 @@ type Updater interface {
 
 type rootCmd struct {
 	cmd     ff.Command
-	storage string
+	storage storage.Kind
 }
 
 type handlerFunc func(ctx context.Context, args []string) error
@@ -30,7 +30,10 @@ func newRoot() *rootCmd {
 	var root rootCmd
 
 	rootFlags := ff.NewFlagSet("anchor")
-	_ = rootFlags.StringVar(&root.storage, 's', "storage", "local", "Set storage type")
+	rootFlags.Func('s', "storage", func(flag string) error {
+		root.storage = storage.Parse(flag)
+		return nil
+	}, "Set storage type")
 
 	root.cmd = ff.Command{
 		Name:  "anchor",
@@ -42,15 +45,14 @@ func newRoot() *rootCmd {
 }
 
 func (root *rootCmd) bootstrap(args []string) error {
-	flags := root.cmd.Flags.(*ff.FlagSet)
-	initCmd := newInit(flags)
-	syncCmd := newSync(flags)
+	var storer storage.Storer
 
+	flags := root.cmd.Flags.(*ff.FlagSet)
 	root.cmd.Subcommands = append(root.cmd.Subcommands, &newCreate(flags).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &initCmd.command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &newInit(flags, storer).command)
 	root.cmd.Subcommands = append(root.cmd.Subcommands, &newGet(flags).command)
 	root.cmd.Subcommands = append(root.cmd.Subcommands, &newDelete(flags).command)
-	root.cmd.Subcommands = append(root.cmd.Subcommands, &syncCmd.command)
+	root.cmd.Subcommands = append(root.cmd.Subcommands, &newSync(flags, storer).command)
 	root.cmd.Subcommands = append(root.cmd.Subcommands, (*ff.Command)(newImport(flags)))
 	root.cmd.Subcommands = append(root.cmd.Subcommands, (*ff.Command)(newTree(flags)))
 
@@ -59,16 +61,13 @@ func (root *rootCmd) bootstrap(args []string) error {
 		return err
 	}
 
-	store, err := storage.New(root.storage)
+	storer, err = storage.New(root.storage)
 	if err != nil {
 		return err
 	}
 
-	initCmd.withStorage(store)
-	syncCmd.withStorage(store)
-
 	for _, c := range root.cmd.Subcommands {
-		if updater, ok := store.(Updater); ok {
+		if updater, ok := storer.(Updater); ok {
 			c.Exec = updaterMiddleware(c.Exec, updater)
 		}
 

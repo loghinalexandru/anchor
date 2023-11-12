@@ -24,7 +24,7 @@ type syncCmd struct {
 	storer  storage.Storer
 }
 
-func newSync(rootFlags *ff.FlagSet) *syncCmd {
+func newSync(rootFlags *ff.FlagSet, storer storage.Storer) *syncCmd {
 	var cmd syncCmd
 
 	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
@@ -35,12 +35,9 @@ func newSync(rootFlags *ff.FlagSet) *syncCmd {
 		Flags:     flags,
 		Exec:      cmd.handle,
 	}
+	cmd.storer = storer
 
 	return &cmd
-}
-
-func (sync *syncCmd) withStorage(storer storage.Storer) {
-	sync.storer = storer
 }
 
 func (sync *syncCmd) handle(context.Context, []string) error {
