@@ -28,8 +28,8 @@ type createCmd struct {
 
 func (crt *createCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	flags := ff.NewFlagSet("create").SetParent(parent)
-	_ = flags.StringSetVar(&crt.labels, 'l', "label", "add labels in order of appearance")
-	_ = flags.StringVar(&crt.title, 't', "title", "", "add custom title")
+	flags.StringSetVar(&crt.labels, 'l', "label", "add labels in order of appearance")
+	flags.StringVar(&crt.title, 't', "title", "", "add custom title")
 
 	return &ff.Command{
 		Name:      "create",

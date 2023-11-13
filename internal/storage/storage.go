@@ -21,6 +21,7 @@ func New(k Kind) Storer {
 		if err != nil {
 			panic(err)
 		}
+		
 		return storer
 	default:
 		return newLocalStorage()

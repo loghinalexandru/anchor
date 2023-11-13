@@ -20,7 +20,7 @@ type getCmd struct {
 
 func (get *getCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	flags := ff.NewFlagSet("get").SetParent(parent)
-	_ = flags.StringSetVar(&get.labels, 'l', "label", "specify label hierarchy")
+	flags.StringSetVar(&get.labels, 'l', "label", "specify label hierarchy")
 
 	return &ff.Command{
 		Name:      "get",

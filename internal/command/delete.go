@@ -27,7 +27,7 @@ type deleteCmd struct {
 
 func (del *deleteCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	flags := ff.NewFlagSet("delete").SetParent(parent)
-	_ = flags.StringSetVar(&del.labels, 'l', "label", "add label in order of appearance")
+	flags.StringSetVar(&del.labels, 'l', "label", "add label in order of appearance")
 
 	return &ff.Command{
 		Name:      "delete",
