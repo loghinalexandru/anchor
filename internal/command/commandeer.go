@@ -22,7 +22,7 @@ func Execute(args []string) error {
 
 	err = root.Run(ctx)
 	if errors.Is(err, ff.ErrHelp) || errors.Is(err, ff.ErrNoExec) {
-		_, _ = fmt.Fprint(os.Stdout, ffhelp.Command(root))
+		fmt.Fprint(os.Stdout, ffhelp.Command(root))
 		return nil
 	}
 

@@ -27,10 +27,8 @@ func (init *initCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		Usage:     "init",
 		ShortHelp: "init a new empty home for anchor",
 		Flags:     ff.NewFlagSet("init").SetParent(parent),
-		Exec:      init.handle,
+		Exec: func(_ context.Context, args []string) error {
+			return init.storer.Init(args...)
+		},
 	}
-}
-
-func (init *initCmd) handle(_ context.Context, args []string) error {
-	return init.storer.Init(args...)
 }
