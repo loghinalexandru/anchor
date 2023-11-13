@@ -15,29 +15,20 @@ import (
 )
 
 type getCmd struct {
-	command ff.Command
-	labels  []string
+	labels []string
 }
 
-func newGet(rootFlags *ff.FlagSet) *getCmd {
-	var cmd getCmd
+func (get *getCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	flags := ff.NewFlagSet("get").SetParent(parent)
+	_ = flags.StringSetVar(&get.labels, 'l', "label", "specify label hierarchy")
 
-	flags := ff.NewFlagSet("get").SetParent(rootFlags)
-	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "specify label hierarchy")
-
-	cmd.command = ff.Command{
+	return &ff.Command{
 		Name:      "get",
 		Usage:     "get",
 		ShortHelp: "get existing bookmarks",
 		Flags:     flags,
-		Exec:      cmd.handle,
+		Exec:      get.handle,
 	}
-
-	return &cmd
-}
-
-func (get *getCmd) def() *ff.Command {
-	return &get.command
 }
 
 func (get *getCmd) handle(_ context.Context, _ []string) error {

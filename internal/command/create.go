@@ -22,31 +22,22 @@ var (
 )
 
 type createCmd struct {
-	command ff.Command
-	labels  []string
-	title   string
+	labels []string
+	title  string
 }
 
-func newCreate(rootFlags *ff.FlagSet) *createCmd {
-	var cmd createCmd
+func (crt *createCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	flags := ff.NewFlagSet("create").SetParent(parent)
+	_ = flags.StringSetVar(&crt.labels, 'l', "label", "add labels in order of appearance")
+	_ = flags.StringVar(&crt.title, 't', "title", "", "add custom title")
 
-	flags := ff.NewFlagSet("create").SetParent(rootFlags)
-	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add labels in order of appearance")
-	_ = flags.StringVar(&cmd.title, 't', "title", "", "add custom title")
-
-	cmd.command = ff.Command{
+	return &ff.Command{
 		Name:      "create",
 		Usage:     "create",
 		ShortHelp: "add a bookmark with set labels",
 		Flags:     flags,
-		Exec:      cmd.handle,
+		Exec:      crt.handle,
 	}
-
-	return &cmd
-}
-
-func (crt *createCmd) def() *ff.Command {
-	return &crt.command
 }
 
 func (crt *createCmd) handle(ctx context.Context, args []string) error {

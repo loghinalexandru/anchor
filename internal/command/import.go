@@ -19,25 +19,16 @@ var (
 	ErrInvalidImportFile = errors.New("invalid import file")
 )
 
-type importCmd ff.Command
+type importCmd struct{}
 
-func newImport(rootFlags *ff.FlagSet) *importCmd {
-	var cmd importCmd
-
-	flags := ff.NewFlagSet("import").SetParent(rootFlags)
-	cmd = importCmd{
+func (imp *importCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	return &ff.Command{
 		Name:      "import",
 		Usage:     "import",
 		ShortHelp: "import bookmarks from a file",
-		Flags:     flags,
-		Exec:      cmd.handle,
+		Flags:     ff.NewFlagSet("import").SetParent(parent),
+		Exec:      imp.handle,
 	}
-
-	return &cmd
-}
-
-func (imp *importCmd) def() *ff.Command {
-	return (*ff.Command)(imp)
 }
 
 func (*importCmd) handle(_ context.Context, args []string) error {

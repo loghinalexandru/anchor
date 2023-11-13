@@ -22,29 +22,20 @@ const (
 )
 
 type deleteCmd struct {
-	command ff.Command
-	labels  []string
+	labels []string
 }
 
-func newDelete(rootFlags *ff.FlagSet) *deleteCmd {
-	var cmd deleteCmd
+func (del *deleteCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	flags := ff.NewFlagSet("delete").SetParent(parent)
+	_ = flags.StringSetVar(&del.labels, 'l', "label", "add label in order of appearance")
 
-	flags := ff.NewFlagSet("delete").SetParent(rootFlags)
-	_ = flags.StringSetVar(&cmd.labels, 'l', "label", "add label in order of appearance")
-
-	cmd.command = ff.Command{
+	return &ff.Command{
 		Name:      "delete",
 		Usage:     "delete",
 		ShortHelp: "remove a bookmark",
 		Flags:     flags,
-		Exec:      cmd.handle,
+		Exec:      del.handle,
 	}
-
-	return &cmd
-}
-
-func (del *deleteCmd) def() *ff.Command {
-	return &del.command
 }
 
 func (del *deleteCmd) handle(_ context.Context, args []string) (err error) {

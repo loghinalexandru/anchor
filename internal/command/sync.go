@@ -20,32 +20,27 @@ type Differ interface {
 }
 
 type syncCmd struct {
-	command ff.Command
-	storer  storage.Storer
+	storer storage.Storer
 }
 
-func newSync(rootFlags *ff.FlagSet) *syncCmd {
-	var cmd syncCmd
-
-	flags := ff.NewFlagSet("sync").SetParent(rootFlags)
-	cmd.command = ff.Command{
-		Name:      "sync",
-		Usage:     "sync",
-		ShortHelp: "sync changes with configured remote",
-		Flags:     flags,
-		Exec:      cmd.handle,
+func newSync() *syncCmd {
+	return &syncCmd{
+		storer: storage.New(storage.Local),
 	}
-	cmd.storer = storage.New(storage.Local)
-
-	return &cmd
 }
 
 func (sync *syncCmd) withStorage(storer storage.Storer) {
 	sync.storer = storer
 }
 
-func (sync *syncCmd) def() *ff.Command {
-	return &sync.command
+func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	return &ff.Command{
+		Name:      "sync",
+		Usage:     "sync",
+		ShortHelp: "sync changes with configured remote",
+		Flags:     ff.NewFlagSet("sync").SetParent(parent),
+		Exec:      sync.handle,
+	}
 }
 
 func (sync *syncCmd) handle(context.Context, []string) error {

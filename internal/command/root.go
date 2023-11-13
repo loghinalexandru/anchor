@@ -19,77 +19,56 @@ type Updater interface {
 	Update() error
 }
 
-type command interface {
-	def() *ff.Command
-	handle(context.Context, []string) error
-}
-
-type rootCmd struct {
-	cmd     ff.Command
-	storage storage.Kind
-}
-
 type handlerFunc func(ctx context.Context, args []string) error
 
-func newRoot() *rootCmd {
-	var root rootCmd
+func newRoot(args []string) (*ff.Command, error) {
+	var storageKind string
 
 	rootFlags := ff.NewFlagSet("anchor")
-	rootFlags.Func('s', "storage", func(flag string) error {
-		root.storage = storage.Parse(flag)
-		return nil
-	}, "Set storage type (default: local)")
+	rootFlags.StringVar(&storageKind, 's', "storage", "local", "Set storage type")
 
-	root.cmd = ff.Command{
+	cmd := &ff.Command{
 		Name:  "anchor",
 		Usage: "anchor [FLAGS] <SUBCOMMAND>",
 		Flags: rootFlags,
 	}
 
-	return &root
-}
+	initialize := newInit()
+	sync := newSync()
 
-func (root *rootCmd) bootstrap(args []string) error {
-	flags := root.cmd.Flags.(*ff.FlagSet)
-
-	subcommands := []command{
-		newCreate(flags),
-		newInit(flags),
-		newGet(flags),
-		newDelete(flags),
-		newSync(flags),
-		newImport(flags),
-		newTree(flags),
+	cmd.Subcommands = []*ff.Command{
+		(&getCmd{}).manifest(rootFlags),
+		(&createCmd{}).manifest(rootFlags),
+		(&treeCmd{}).manifest(rootFlags),
+		(&importCmd{}).manifest(rootFlags),
+		(&deleteCmd{}).manifest(rootFlags),
+		initialize.manifest(rootFlags),
+		sync.manifest(rootFlags),
 	}
 
-	root.cmd.Subcommands = make([]*ff.Command, len(subcommands))
-	for i, cm := range subcommands {
-		root.cmd.Subcommands[i] = cm.def()
-	}
-
-	err := root.cmd.Parse(args,
+	err := cmd.Parse(args,
 		ff.WithConfigFile(config.FilePath()),
 		ff.WithConfigFileParser(ffyaml.Parse),
 		ff.WithConfigAllowMissingFile())
-
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	storer := storage.New(root.storage)
-	for _, c := range subcommands {
-		if setter, ok := c.(interface{ withStorage(storage.Storer) }); ok {
-			setter.withStorage(storer)
-		}
+	storer := storage.New(storage.Parse(storageKind))
 
+	// Assign storer implementation determined after parsing
+	initialize.withStorage(storer)
+	sync.withStorage(storer)
+
+	for _, c := range cmd.Subcommands {
 		if updater, ok := storer.(Updater); ok {
-			c.def().Exec = updaterMiddleware(c.def().Exec, updater)
+			c.Exec = updaterMiddleware(c.Exec, updater)
 		}
 
-		c.def().Exec = contextHandlerMiddleware(c.def().Exec)
+		c.Exec = contextHandlerMiddleware(c.Exec)
 	}
 
-	return nil
+	return cmd, nil
 }
 
 func updaterMiddleware(next handlerFunc, updater Updater) handlerFunc {

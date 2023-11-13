@@ -12,16 +12,17 @@ import (
 )
 
 func Execute(args []string) error {
-	root := newRoot()
-	err := root.bootstrap(args)
+	root, err := newRoot(args)
 	if err != nil {
 		return err
 	}
 
-	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
-	err = root.cmd.Run(ctx)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	err = root.Run(ctx)
 	if errors.Is(err, ff.ErrHelp) || errors.Is(err, ff.ErrNoExec) {
-		_, _ = fmt.Fprint(os.Stdout, ffhelp.Command(&root.cmd))
+		_, _ = fmt.Fprint(os.Stdout, ffhelp.Command(root))
 		return nil
 	}
 

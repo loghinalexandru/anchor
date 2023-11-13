@@ -8,31 +8,27 @@ import (
 )
 
 type initCmd struct {
-	command ff.Command
-	storer  storage.Storer
+	storer storage.Storer
 }
 
-func newInit(rootFlags *ff.FlagSet) *initCmd {
-	var cmd initCmd
-
-	cmd.command = ff.Command{
-		Name:      "init",
-		Usage:     "init",
-		ShortHelp: "init a new empty home for anchor",
-		Flags:     ff.NewFlagSet("init").SetParent(rootFlags),
-		Exec:      cmd.handle,
+func newInit() *initCmd {
+	return &initCmd{
+		storer: storage.New(storage.Local),
 	}
-	cmd.storer = storage.New(storage.Local)
-
-	return &cmd
 }
 
 func (init *initCmd) withStorage(storer storage.Storer) {
 	init.storer = storer
 }
 
-func (init *initCmd) def() *ff.Command {
-	return &init.command
+func (init *initCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	return &ff.Command{
+		Name:      "init",
+		Usage:     "init",
+		ShortHelp: "init a new empty home for anchor",
+		Flags:     ff.NewFlagSet("init").SetParent(parent),
+		Exec:      init.handle,
+	}
 }
 
 func (init *initCmd) handle(_ context.Context, args []string) error {

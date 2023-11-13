@@ -10,25 +10,16 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
-type treeCmd ff.Command
+type treeCmd struct{}
 
-func newTree(rootFlags *ff.FlagSet) *treeCmd {
-	var cmd *treeCmd
-
-	flags := ff.NewFlagSet("tree").SetParent(rootFlags)
-	cmd = &treeCmd{
+func (tree *treeCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	return &ff.Command{
 		Name:      "tree",
 		Usage:     "tree",
 		ShortHelp: "list available labels in a tree structure",
-		Flags:     flags,
-		Exec:      cmd.handle,
+		Flags:     ff.NewFlagSet("tree").SetParent(parent),
+		Exec:      tree.handle,
 	}
-
-	return cmd
-}
-
-func (tree *treeCmd) def() *ff.Command {
-	return (*ff.Command)(tree)
 }
 
 func (*treeCmd) handle(context.Context, []string) error {
