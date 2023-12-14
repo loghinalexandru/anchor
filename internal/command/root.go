@@ -11,56 +11,58 @@ import (
 	"github.com/peterbourgon/ff/v4/ffyaml"
 )
 
-var (
+const (
 	msgUpdateFailed = "Failed pulling latest changes. Continue operation?"
 )
+
+type storerContextKey struct{}
 
 type Updater interface {
 	Update() error
 }
 
-type handlerFunc func(ctx context.Context, args []string) error
+type rootCmd struct {
+	storage string
+	cmd     *ff.Command
+}
 
-func newRoot(args []string) (*ff.Command, error) {
-	var storageKind string
+func newRoot() *rootCmd {
+	root := &rootCmd{}
 
 	rootFlags := ff.NewFlagSet("anchor")
-	rootFlags.StringVar(&storageKind, 's', "storage", "local", "Set storage type")
+	rootFlags.StringVar(&root.storage, 's', "storage", "local", "Set storage type")
 
-	cmd := &ff.Command{
+	root.cmd = &ff.Command{
 		Name:  "anchor",
 		Usage: "anchor [FLAGS] <SUBCOMMAND>",
 		Flags: rootFlags,
 	}
 
-	initialize := newInit()
-	sync := newSync()
-
-	cmd.Subcommands = []*ff.Command{
+	root.cmd.Subcommands = []*ff.Command{
 		(&getCmd{}).manifest(rootFlags),
 		(&createCmd{}).manifest(rootFlags),
 		(&treeCmd{}).manifest(rootFlags),
 		(&importCmd{}).manifest(rootFlags),
 		(&deleteCmd{}).manifest(rootFlags),
-		initialize.manifest(rootFlags),
-		sync.manifest(rootFlags),
+		(&initCmd{}).manifest(rootFlags),
+		(&syncCmd{}).manifest(rootFlags),
 	}
 
-	err := cmd.Parse(args,
+	return root
+}
+
+func (root *rootCmd) handle(ctx context.Context, args []string) error {
+	err := root.cmd.Parse(args,
 		ff.WithConfigFile(config.FilePath()),
 		ff.WithConfigFileParser(ffyaml.Parse),
 		ff.WithConfigAllowMissingFile())
+
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	storer := storage.New(storage.Parse(storageKind))
-
-	// Assign storer implementation determined after parsing
-	initialize.withStorage(storer)
-	sync.withStorage(storer)
-
-	for _, c := range cmd.Subcommands {
+	storer := storage.New(storage.Parse(root.storage))
+	for _, c := range root.cmd.Subcommands {
 		if updater, ok := storer.(Updater); ok {
 			c.Exec = updaterMiddleware(c.Exec, updater)
 		}
@@ -68,8 +70,10 @@ func newRoot(args []string) (*ff.Command, error) {
 		c.Exec = contextHandlerMiddleware(c.Exec)
 	}
 
-	return cmd, nil
+	return root.cmd.Run(context.WithValue(ctx, storerContextKey{}, storer))
 }
+
+type handlerFunc func(ctx context.Context, args []string) error
 
 func updaterMiddleware(next handlerFunc, updater Updater) handlerFunc {
 	return func(ctx context.Context, args []string) error {

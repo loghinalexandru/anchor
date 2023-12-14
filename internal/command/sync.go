@@ -19,19 +19,7 @@ type Differ interface {
 	Diff() (string, error)
 }
 
-type syncCmd struct {
-	storer storage.Storer
-}
-
-func newSync() *syncCmd {
-	return &syncCmd{
-		storer: storage.New(storage.Local),
-	}
-}
-
-func (sync *syncCmd) withStorage(storer storage.Storer) {
-	sync.storer = storer
-}
+type syncCmd struct{}
 
 func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
@@ -43,8 +31,10 @@ func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	}
 }
 
-func (sync *syncCmd) handle(context.Context, []string) error {
-	if d, ok := sync.storer.(Differ); ok {
+func (sync *syncCmd) handle(ctx context.Context, _ []string) error {
+	storer := ctx.Value(storerContextKey{}).(storage.Storer)
+
+	if d, ok := storer.(Differ); ok {
 		status, err := d.Diff()
 		if err != nil {
 			return err
@@ -62,5 +52,5 @@ func (sync *syncCmd) handle(context.Context, []string) error {
 		return nil
 	}
 
-	return sync.storer.Store()
+	return storer.Store()
 }
