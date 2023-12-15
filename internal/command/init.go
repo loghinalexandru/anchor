@@ -3,7 +3,6 @@ package command
 import (
 	"context"
 
-	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -16,8 +15,11 @@ func (init *initCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		ShortHelp: "init a new empty home for anchor",
 		Flags:     ff.NewFlagSet("init").SetParent(parent),
 		Exec: func(ctx context.Context, args []string) error {
-			storer := ctx.Value(storerContextKey{}).(storage.Storer)
-			return storer.Init(args...)
+			return init.handle(ctx.(rootContext), args)
 		},
 	}
+}
+
+func (init *initCmd) handle(ctx rootContext, args []string) error {
+	return ctx.storer.Init(args...)
 }

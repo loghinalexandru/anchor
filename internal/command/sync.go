@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/loghinalexandru/anchor/internal/output"
-	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -27,14 +26,14 @@ func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		Usage:     "sync",
 		ShortHelp: "sync changes with configured remote",
 		Flags:     ff.NewFlagSet("sync").SetParent(parent),
-		Exec:      sync.handle,
+		Exec: func(ctx context.Context, args []string) error {
+			return sync.handle(ctx.(rootContext), args)
+		},
 	}
 }
 
-func (sync *syncCmd) handle(ctx context.Context, _ []string) error {
-	storer := ctx.Value(storerContextKey{}).(storage.Storer)
-
-	if d, ok := storer.(Differ); ok {
+func (sync *syncCmd) handle(ctx rootContext, _ []string) error {
+	if d, ok := ctx.storer.(Differ); ok {
 		status, err := d.Diff()
 		if err != nil {
 			return err
@@ -52,5 +51,5 @@ func (sync *syncCmd) handle(ctx context.Context, _ []string) error {
 		return nil
 	}
 
-	return storer.Store()
+	return ctx.storer.Store()
 }

@@ -15,10 +15,13 @@ const (
 	msgUpdateFailed = "Failed pulling latest changes. Continue operation?"
 )
 
-type storerContextKey struct{}
-
 type Updater interface {
 	Update() error
+}
+
+type rootContext struct {
+	context.Context
+	storer storage.Storer
 }
 
 type rootCmd struct {
@@ -70,7 +73,12 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 		c.Exec = contextHandlerMiddleware(c.Exec)
 	}
 
-	return root.cmd.Run(context.WithValue(ctx, storerContextKey{}, storer))
+	cmdCtx := rootContext{
+		Context: ctx,
+		storer:  storer,
+	}
+
+	return root.cmd.Run(cmdCtx)
 }
 
 type handlerFunc func(ctx context.Context, args []string) error
