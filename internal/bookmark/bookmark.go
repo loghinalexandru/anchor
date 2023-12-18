@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -77,9 +78,12 @@ func NewFromLine(line string) (*Bookmark, error) {
 		return nil, ErrArgsMismatch
 	}
 
+	name, _ := strconv.Unquote(parts[0])
+	link, _ := strconv.Unquote(parts[1])
+
 	return &Bookmark{
-		Name: strings.Replace(strings.Trim(parts[0], " \""), "\\", "", -1),
-		URL:  strings.Replace(strings.Trim(parts[1], " \""), "\\", "", -1),
+		Name: strings.TrimSpace(name),
+		URL:  strings.TrimSpace(link),
 	}, nil
 }
 

@@ -53,19 +53,24 @@ func TestNewFromLine(t *testing.T) {
 		url   string
 	}{
 		{
-			"\r\n\"Outlook\"    \"https://outlook.live.com/mail/0/\"\n\r",
+			"\r\n\"Outlook\"  \"https://outlook.live.com/mail/0/\"\n\r",
 			"Outlook",
 			"https://outlook.live.com/mail/0/",
 		},
 		{
-			"\"GmailTest \" \" \"https://accounts.google.com/b/0/AddMailService\"   ",
+			"\"GmailTest \"  \"https://accounts.google.com/b/0/AddMailService\"   ",
 			"GmailTest",
 			"https://accounts.google.com/b/0/AddMailService",
 		},
 		{
-			"\"YouTube \" \"   \"https://youtube.com/\"",
+			"\"YouTube \"   \"https://youtube.com/\"",
 			"YouTube",
 			"https://youtube.com/",
+		},
+		{
+			"\"hello \\\" \\\"sa\\\"asd\\\" asd\\\"\" \"https://yourbasic.org/golang/trim-whitespace-from-string\"",
+			"hello \" \"sa\"asd\" asd\"",
+			"https://yourbasic.org/golang/trim-whitespace-from-string",
 		},
 	}
 
