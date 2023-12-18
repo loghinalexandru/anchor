@@ -1,6 +1,7 @@
 package bubbletea
 
 import (
+	"fmt"
 	"os/exec"
 	"runtime"
 
@@ -8,6 +9,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/loghinalexandru/anchor/internal/bookmark"
+)
+
+const (
+	msgStatus = "Deleted %q"
 )
 
 func newItemDelegate() list.DefaultDelegate {
@@ -25,7 +30,11 @@ func update(msg tea.Msg, m *list.Model) tea.Cmd {
 		switch msg.String() {
 		case "enter", " ":
 			item := m.SelectedItem().(*bookmark.Bookmark)
-			_ = open(item.URL)
+			open(item.URL)
+		case "delete":
+			item := m.SelectedItem().(*bookmark.Bookmark)
+			m.RemoveItem(m.Index())
+			return m.NewStatusMessage(fmt.Sprintf(msgStatus, item.Name))
 		}
 	}
 

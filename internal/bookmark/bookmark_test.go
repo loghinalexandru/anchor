@@ -99,12 +99,12 @@ func TestString(t *testing.T) {
 		{
 			title: "Test Title",
 			url:   "https://google.com",
-			want:  `"Test Title" "https://google.com"`,
+			want:  "\"Test Title\" \"https://google.com\"\n",
 		},
 		{
 			title: `Test "Title" "Test Title Two`,
 			url:   "https://google.com",
-			want:  `"Test Title Test Title Two" "https://google.com"`,
+			want:  "\"Test Title Test Title Two\" \"https://google.com\"\n",
 		},
 	}
 

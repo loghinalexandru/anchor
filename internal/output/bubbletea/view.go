@@ -1,10 +1,12 @@
 package bubbletea
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/loghinalexandru/anchor/internal/bookmark"
 )
 
 type View struct {
@@ -14,6 +16,14 @@ type View struct {
 
 func NewView(bookmarks []list.Item) *View {
 	viewList := list.New(bookmarks, newItemDelegate(), 0, 0)
+	viewList.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{key.NewBinding(key.WithKeys("delete"), key.WithHelp("del", "delete"))}
+	}
+
+	viewList.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{key.NewBinding(key.WithKeys("delete"), key.WithHelp("delete", "remove bookmark"))}
+	}
+
 	viewList.Title = "Bookmarks"
 	viewList.InfiniteScrolling = true
 	viewList.Paginator.Type = paginator.Arabic
@@ -27,6 +37,16 @@ func NewView(bookmarks []list.Item) *View {
 	}
 }
 
+func (v *View) Bookmarks() []*bookmark.Bookmark {
+	res := make([]*bookmark.Bookmark, len(v.bookmarks.Items()))
+
+	for i, bk := range v.bookmarks.Items() {
+		res[i] = bk.(*bookmark.Bookmark)
+	}
+
+	return res
+}
+
 func (v *View) Init() tea.Cmd {
 	return nil
 }
@@ -37,10 +57,6 @@ func (v *View) View() string {
 
 func (v *View) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() == "ctrl+c" {
-			return v, tea.Quit
-		}
 	case tea.WindowSizeMsg:
 		x, y := v.style.GetFrameSize()
 		v.bookmarks.SetSize(msg.Width-x, msg.Height-y)

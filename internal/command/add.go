@@ -21,50 +21,50 @@ var (
 	ErrInvalidArgument = errors.New("missing bookmark URL from arguments")
 )
 
-type createCmd struct {
+type addCmd struct {
 	labels []string
 	title  string
 }
 
-func (crt *createCmd) manifest(parent *ff.FlagSet) *ff.Command {
-	flags := ff.NewFlagSet("create").SetParent(parent)
-	flags.StringSetVar(&crt.labels, 'l', "label", "add labels in order of appearance")
-	flags.StringVar(&crt.title, 't', "title", "", "add custom title")
+func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	flags := ff.NewFlagSet("add").SetParent(parent)
+	flags.StringSetVar(&add.labels, 'l', "label", "add labels in order of appearance")
+	flags.StringVar(&add.title, 't', "title", "", "add custom title")
 
 	return &ff.Command{
-		Name:      "create",
-		Usage:     "create",
+		Name:      "add",
+		Usage:     "add",
 		ShortHelp: "add a bookmark with set labels",
 		Flags:     flags,
-		Exec:      crt.handle,
+		Exec:      add.handle,
 	}
 }
 
-func (crt *createCmd) handle(ctx context.Context, args []string) error {
+func (add *addCmd) handle(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		return ErrInvalidArgument
 	}
 
 	client := &http.Client{Timeout: clientTimeout}
-	b, err := bookmark.New(crt.title, args[0], bookmark.WithClient(client))
+	b, err := bookmark.New(add.title, args[0], bookmark.WithClient(client))
 
 	if err != nil {
 		return err
 	}
 
-	if crt.title == "" {
+	if add.title == "" {
 		err = b.TitleFromURL(ctx)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = label.Validate(crt.labels)
+	err = label.Validate(add.labels)
 	if err != nil {
 		return err
 	}
 
-	path := label.Filepath(crt.labels)
+	path := label.Filepath(add.labels)
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
 	if err != nil {
 		return err

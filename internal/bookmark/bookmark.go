@@ -60,7 +60,7 @@ func NewFromLine(line string) (*Bookmark, error) {
 }
 
 func (b *Bookmark) String() string {
-	return fmt.Sprintf("%q %q", b.Name, b.URL)
+	return fmt.Sprintf("%q %q\n", b.Name, b.URL)
 }
 
 func (b *Bookmark) TitleFromURL(ctx context.Context) error {
@@ -109,7 +109,7 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 		return fmt.Errorf("%s: %w", b.URL, ErrDuplicate)
 	}
 
-	_, err = fmt.Fprintln(rw, b.String())
+	_, err = fmt.Fprint(rw, b.String())
 	return err
 }
 

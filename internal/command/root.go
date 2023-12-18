@@ -42,13 +42,13 @@ func newRoot() *rootCmd {
 	}
 
 	root.cmd.Subcommands = []*ff.Command{
-		(&getCmd{}).manifest(rootFlags),
-		(&createCmd{}).manifest(rootFlags),
-		(&treeCmd{}).manifest(rootFlags),
-		(&importCmd{}).manifest(rootFlags),
-		(&deleteCmd{}).manifest(rootFlags),
 		(&initCmd{}).manifest(rootFlags),
+		(&viewCmd{}).manifest(rootFlags),
+		(&addCmd{}).manifest(rootFlags),
+		(&deleteCmd{}).manifest(rootFlags),
+		(&treeCmd{}).manifest(rootFlags),
 		(&syncCmd{}).manifest(rootFlags),
+		(&importCmd{}).manifest(rootFlags),
 	}
 
 	return root
