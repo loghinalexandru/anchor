@@ -33,15 +33,15 @@ func Generate(fsys fs.FS) string {
 			f.Close()
 		}
 
-		labels := strings.Split(d.Name(), config.StdSeparator)
+		labels := strings.Split(d.Name(), config.StdLabelSeparator)
 		if _, ok := known[labels[0]]; !ok {
 			known[labels[0]] = branch(tree, lineCount, labels[0], len(labels) == 1)
 		}
 
 		for i := 1; i < len(labels); i++ {
-			curr := strings.Join(labels[:i+1], config.StdSeparator)
+			curr := strings.Join(labels[:i+1], config.StdLabelSeparator)
 			if _, ok := known[curr]; !ok {
-				prev := strings.Join(labels[:i], config.StdSeparator)
+				prev := strings.Join(labels[:i], config.StdLabelSeparator)
 				known[curr] = branch(known[prev], lineCount, labels[i], i == len(labels)-1)
 			}
 		}

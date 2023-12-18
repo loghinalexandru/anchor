@@ -40,23 +40,14 @@ func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	}
 }
 
-func (add *addCmd) handle(ctx context.Context, args []string) error {
+func (add *addCmd) handle(_ context.Context, args []string) error {
 	if len(args) == 0 {
 		return ErrInvalidArgument
 	}
 
-	client := &http.Client{Timeout: clientTimeout}
-	b, err := bookmark.New(add.title, args[0], bookmark.WithClient(client))
-
+	b, err := bookmark.New(args[0], bookmark.WithTitle(add.title), bookmark.WithClient(&http.Client{Timeout: clientTimeout}))
 	if err != nil {
 		return err
-	}
-
-	if add.title == "" {
-		err = b.TitleFromURL(ctx)
-		if err != nil {
-			return err
-		}
 	}
 
 	err = label.Validate(add.labels)

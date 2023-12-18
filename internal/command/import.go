@@ -71,7 +71,7 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 	}
 
 	for _, b := range node.Bookmarks {
-		entry, err := bookmark.New(b.Title, b.URL)
+		entry, err := bookmark.New(b.URL, bookmark.WithTitle(b.Title))
 		if err != nil {
 			return err
 		}

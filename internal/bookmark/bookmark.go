@@ -1,7 +1,6 @@
 package bookmark
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -14,7 +13,6 @@ import (
 var (
 	ErrDuplicate    = errors.New("duplicate bookmark")
 	ErrArgsMismatch = errors.New("mismatch in line arguments")
-	ErrInvalidTitle = errors.New("could not determine title from URL")
 )
 
 type Bookmark struct {
@@ -23,74 +21,100 @@ type Bookmark struct {
 	client *http.Client
 }
 
-func New(name string, rawURL string, opts ...func(*Bookmark)) (*Bookmark, error) {
+func New(rawURL string, opts ...func(*Bookmark)) (*Bookmark, error) {
 	_, err := url.ParseRequestURI(rawURL)
 	if err != nil {
 		return nil, err
 	}
 
-	result := &Bookmark{
-		Name:   sanitize(name),
+	res := &Bookmark{
 		URL:    rawURL,
 		client: http.DefaultClient,
 	}
 
 	for _, opt := range opts {
-		opt(result)
+		opt(res)
 	}
 
-	return result, nil
+	if res.Name == "" {
+		res.Name = res.fetchTitle()
+	}
+
+	return res, nil
+}
+
+func WithTitle(title string) func(*Bookmark) {
+	return func(b *Bookmark) {
+		if title != "" {
+			b.Name = title
+		}
+	}
 }
 
 func WithClient(client *http.Client) func(*Bookmark) {
 	return func(b *Bookmark) {
-		b.client = client
+		if client != nil {
+			b.client = client
+		}
 	}
 }
 
 func NewFromLine(line string) (*Bookmark, error) {
-	line = strings.Trim(line, " \"\r\n")
-	parts := strings.Split(line, `" "`)
+	var quoted bool
+	var prev rune
+
+	line = strings.Trim(line, " \r\n")
+	parts := strings.FieldsFunc(line, func(curr rune) bool {
+		if curr == '"' && prev != '\\' {
+			quoted = !quoted
+		}
+
+		prev = curr
+		return !quoted && curr == ' '
+	})
 
 	if len(parts) != 2 {
 		return nil, ErrArgsMismatch
 	}
 
-	return New(parts[0], parts[1])
+	return &Bookmark{
+		Name: strings.Replace(strings.Trim(parts[0], " \""), "\\", "", -1),
+		URL:  strings.Replace(strings.Trim(parts[1], " \""), "\\", "", -1),
+	}, nil
 }
 
-func (b *Bookmark) String() string {
-	return fmt.Sprintf("%q %q\n", b.Name, b.URL)
-}
+var titleRegexp = regexp.MustCompile(`<title>(?P<title>.+?)</title>`)
 
-func (b *Bookmark) TitleFromURL(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, "GET", b.URL, nil)
+func (b *Bookmark) fetchTitle() string {
+	result := b.URL
+
+	req, err := http.NewRequest("GET", b.URL, nil)
 	if err != nil {
-		return err
+		return result
 	}
 
 	res, err := b.client.Do(req)
 	if err != nil {
-		return err
+		return result
 	}
+	defer res.Body.Close()
 
 	page, err := io.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return result
 	}
 
-	err = res.Body.Close()
-	if err != nil {
-		return err
+	match := titleRegexp.FindSubmatch(page)
+
+	if len(match) == 0 {
+		return b.URL
 	}
 
-	title := findTitle(page)
-	if title == "" {
-		return ErrInvalidTitle
-	}
+	return string(match[1])
+}
 
-	b.Name = title
-	return nil
+func (b *Bookmark) String() string {
+	return fmt.Sprintf("%q %q\n", b.Name, b.URL)
 }
 
 func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
@@ -123,21 +147,4 @@ func (b *Bookmark) Description() string {
 
 func (b *Bookmark) FilterValue() string {
 	return b.Name
-}
-
-func sanitize(input string) string {
-	repl := strings.NewReplacer("\n", "", "\r", "", "\"", "")
-	return repl.Replace(input)
-}
-
-var titleRegexp = regexp.MustCompile(`<title>(?P<title>.+?)</title>`)
-
-func findTitle(content []byte) string {
-	match := titleRegexp.FindSubmatch(content)
-
-	if len(match) == 0 {
-		return ""
-	}
-
-	return string(match[1])
 }

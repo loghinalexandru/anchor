@@ -38,6 +38,6 @@ func Filepath(labels []string) string {
 		labels[i] = notLabelRegexp.ReplaceAllString(strings.ToLower(l), "")
 	}
 
-	filename := strings.Join(labels, config.StdSeparator)
+	filename := strings.Join(labels, config.StdLabelSeparator)
 	return filepath.Join(rootDir, strings.ToLower(filename))
 }

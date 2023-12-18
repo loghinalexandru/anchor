@@ -17,11 +17,15 @@ type View struct {
 func NewView(bookmarks []list.Item) *View {
 	viewList := list.New(bookmarks, newItemDelegate(), 0, 0)
 	viewList.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{key.NewBinding(key.WithKeys("delete"), key.WithHelp("del", "delete"))}
+		return []key.Binding{
+			key.NewBinding(key.WithKeys("delete"), key.WithHelp("del", "delete")),
+		}
 	}
 
 	viewList.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{key.NewBinding(key.WithKeys("delete"), key.WithHelp("delete", "remove bookmark"))}
+		return []key.Binding{
+			key.NewBinding(key.WithKeys("delete"), key.WithHelp("delete", "remove bookmark")),
+		}
 	}
 
 	viewList.Title = "Bookmarks"

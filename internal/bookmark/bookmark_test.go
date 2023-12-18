@@ -2,8 +2,7 @@ package bookmark_test
 
 import (
 	"bytes"
-	"context"
-	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -20,7 +19,7 @@ func TestNew(t *testing.T) {
 	title := "test-title"
 	url := "https://google.com"
 
-	got, err := bookmark.New(title, url)
+	got, err := bookmark.New(url, bookmark.WithTitle(title))
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}
@@ -37,10 +36,9 @@ func TestNew(t *testing.T) {
 func TestNewWithInvalidURL(t *testing.T) {
 	t.Parallel()
 
-	title := "test-title"
 	url := "invalid-url"
 
-	_, err := bookmark.New(title, url)
+	_, err := bookmark.New(url)
 	if err == nil {
 		t.Error("expected error not found")
 	}
@@ -55,16 +53,17 @@ func TestNewFromLine(t *testing.T) {
 		url   string
 	}{
 		{
-			"\r\n\"Outlook\" \"https://outlook.live.com/mail/0/\"\n\r",
+			"\r\n\"Outlook\"    \"https://outlook.live.com/mail/0/\"\n\r",
 			"Outlook",
 			"https://outlook.live.com/mail/0/",
 		},
 		{
-			`"Gmail"Test""" "https://accounts.google.com/b/0/AddMailService"   `,
+			"\"GmailTest \" \" \"https://accounts.google.com/b/0/AddMailService\"   ",
 			"GmailTest",
-			"https://accounts.google.com/b/0/AddMailService"},
+			"https://accounts.google.com/b/0/AddMailService",
+		},
 		{
-			`"YouTube" "https://youtube.com/"`,
+			"\"YouTube \" \"   \"https://youtube.com/\"",
 			"YouTube",
 			"https://youtube.com/",
 		},
@@ -77,12 +76,12 @@ func TestNewFromLine(t *testing.T) {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(bk.Name, c.title) {
-				t.Error(cmp.Diff(c.title, bk.Name))
+			if bk.Name != c.title {
+				t.Errorf("wrong deserialization: want %s , got: %s", c.title, bk.Name)
 			}
 
-			if !cmp.Equal(bk.URL, c.url) {
-				t.Error(cmp.Diff(c.url, bk.URL))
+			if bk.URL != c.url {
+				t.Errorf("wrong deserialization: want %s , got: %s", c.url, bk.URL)
 			}
 		})
 	}
@@ -104,18 +103,18 @@ func TestString(t *testing.T) {
 		{
 			title: `Test "Title" "Test Title Two`,
 			url:   "https://google.com",
-			want:  "\"Test Title Test Title Two\" \"https://google.com\"\n",
+			want:  "\"Test \\\"Title\\\" \\\"Test Title Two\" \"https://google.com\"\n",
 		},
 	}
 
 	for _, c := range tsc {
 		t.Run(c.title, func(t *testing.T) {
-			bk, err := bookmark.New(c.title, c.url)
+			bk, err := bookmark.New(c.url, bookmark.WithTitle(c.title))
 			if err != nil {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(c.want, bk.String()) {
+			if c.want != bk.String() {
 				t.Errorf("wrong serialization: want %s , got: %s", c.want, bk.String())
 			}
 		})
@@ -149,7 +148,7 @@ func TestTitleFromURL(t *testing.T) {
 
 	for _, c := range tcs {
 		t.Run(c.input, func(t *testing.T) {
-			bk, err := bookmark.New("test", "https://google.com", bookmark.WithClient(newTestClient(func(req *http.Request) *http.Response {
+			bk, err := bookmark.New("https://google.com", bookmark.WithClient(newTestClient(func(req *http.Request) *http.Response {
 				return &http.Response{
 					Body: io.NopCloser(bytes.NewBufferString(c.input)),
 				}
@@ -159,7 +158,6 @@ func TestTitleFromURL(t *testing.T) {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			err = bk.TitleFromURL(context.Background())
 			if err != nil {
 				t.Fatalf("unexpected error; got %q", err)
 			}
@@ -168,26 +166,6 @@ func TestTitleFromURL(t *testing.T) {
 				t.Error(cmp.Diff(c.want, bk.Name))
 			}
 		})
-	}
-}
-
-func TestTitleFromURLWithError(t *testing.T) {
-	t.Parallel()
-
-	bk, err := bookmark.New("test-title", "https://google.com", bookmark.WithClient(newTestClient(func(req *http.Request) *http.Response {
-		return &http.Response{
-			Body: io.NopCloser(bytes.NewBufferString("")),
-		}
-	})))
-
-	if err != nil {
-		t.Fatalf("unexpected error; got %q", err)
-	}
-
-	err = bk.TitleFromURL(context.Background())
-
-	if !errors.Is(err, bookmark.ErrInvalidTitle) {
-		t.Errorf("unexpected error; got %q", err)
 	}
 }
 
@@ -200,8 +178,9 @@ func TestWrite(t *testing.T) {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	want := "\"test-title \\\\n test\" \"https://google.com\"\n"
-	bk, err := bookmark.New("test-title \\n test", "https://google.com")
+	title := "test-title \\n \"test\" asd"
+	want := "\"test-title \\\\n \\\"test\\\" asd\" \"https://google.com\"\n"
+	bk, err := bookmark.New("https://google.com", bookmark.WithTitle(title))
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}
@@ -216,15 +195,15 @@ func TestWrite(t *testing.T) {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	content, err := os.ReadFile(output)
+	got, err := os.ReadFile(output)
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	got := string(content)
+	fmt.Printf(string(got))
 
-	if !cmp.Equal(got, want) {
-		t.Error(cmp.Diff(want, got))
+	if string(got) != want {
+		t.Errorf("wrong serialization: want %s , got: %s", want, got)
 	}
 }
 
