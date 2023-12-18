@@ -28,6 +28,6 @@ func (*localStorage) Init(_ ...string) error {
 	return nil
 }
 
-func (*localStorage) Store() error {
+func (*localStorage) Store(_ string) error {
 	return nil
 }

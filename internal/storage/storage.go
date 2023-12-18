@@ -11,7 +11,7 @@ const (
 
 type Storer interface {
 	Init(args ...string) error
-	Store() error
+	Store(msg string) error
 }
 
 func New(k Kind) Storer {
@@ -21,7 +21,7 @@ func New(k Kind) Storer {
 		if err != nil {
 			panic(err)
 		}
-		
+
 		return storer
 	default:
 		return newLocalStorage()

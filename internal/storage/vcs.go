@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	stdUser   = "git"
-	msgCommit = "Sync bookmarks"
+	stdUser = "git"
 )
 
 var (
@@ -73,7 +72,7 @@ func (storage *gitStorage) Update() error {
 	return err
 }
 
-func (storage *gitStorage) Store() error {
+func (storage *gitStorage) Store(msg string) error {
 	repo, err := git.PlainOpen(storage.path)
 	if err != nil {
 		return err
@@ -89,7 +88,7 @@ func (storage *gitStorage) Store() error {
 		return err
 	}
 
-	_, err = tree.Commit(msgCommit, &git.CommitOptions{})
+	_, err = tree.Commit(msg, &git.CommitOptions{})
 	if err != nil {
 		return err
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -18,14 +19,19 @@ type Differ interface {
 	Diff() (string, error)
 }
 
-type syncCmd struct{}
+type syncCmd struct {
+	msg string
+}
 
 func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
+	flags := ff.NewFlagSet("sync").SetParent(parent)
+	flags.StringVar(&sync.msg, 'm', "message", config.StdSyncMsg, "Optional sync message")
+
 	return &ff.Command{
 		Name:      "sync",
 		Usage:     "sync",
 		ShortHelp: "sync changes with configured remote",
-		Flags:     ff.NewFlagSet("sync").SetParent(parent),
+		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
 			return sync.handle(ctx.(rootContext), args)
 		},
@@ -51,5 +57,5 @@ func (sync *syncCmd) handle(ctx rootContext, _ []string) error {
 		return nil
 	}
 
-	return ctx.storer.Store()
+	return ctx.storer.Store(sync.msg)
 }
