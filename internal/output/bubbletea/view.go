@@ -139,7 +139,7 @@ func (v *View) handleList(msg tea.KeyMsg) (list.Model, tea.Cmd) {
 	switch msg.String() {
 	case "enter", "space":
 		item := v.bookmarks.SelectedItem().(*model.Bookmark)
-		open(item.Description())
+		_ = open(item.Description())
 	case "d", "delete":
 		item := v.bookmarks.SelectedItem().(*model.Bookmark)
 		v.bookmarks.RemoveItem(v.bookmarks.Index())

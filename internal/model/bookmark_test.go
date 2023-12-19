@@ -204,7 +204,7 @@ func TestWrite(t *testing.T) {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	fmt.Printf(string(got))
+	fmt.Print(string(got))
 
 	if string(got) != want {
 		t.Errorf("wrong serialization: want %s , got: %s", want, got)
