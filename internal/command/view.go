@@ -3,7 +3,6 @@ package command
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -17,7 +16,7 @@ import (
 )
 
 const (
-	msgDeleteBookmarks = "You are about to delete %d bookmark(s) from previous operation. Proceed?"
+	msgDeleteBookmarks = "You are about to apply changes from previous operation. Proceed?"
 )
 
 type viewCmd struct {
@@ -69,7 +68,7 @@ func (v *viewCmd) handle(ctx context.Context, _ []string) error {
 	}
 
 	view := state.(*bubbletea.View)
-	if len(view.Bookmarks()) < len(bookmarks) && !output.Confirmation(fmt.Sprintf(msgDeleteBookmarks, len(bookmarks)-len(view.Bookmarks())), os.Stdin, os.Stdout) {
+	if view.Dirty() && !output.Confirmation(msgDeleteBookmarks, os.Stdin, os.Stdout) {
 		return nil
 	}
 
