@@ -143,6 +143,10 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 	return err
 }
 
+func (b *Bookmark) SetTitle(title string) {
+	b.title = title
+}
+
 func (b *Bookmark) Title() string {
 	return b.title
 }

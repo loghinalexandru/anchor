@@ -37,7 +37,7 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	}
 }
 
-func (v *viewCmd) handle(_ context.Context, _ []string) error {
+func (v *viewCmd) handle(ctx context.Context, _ []string) error {
 	err := label.Validate(v.labels)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (v *viewCmd) handle(_ context.Context, _ []string) error {
 		bookmarks = append(bookmarks, bk)
 	}
 
-	runner := tea.NewProgram(bubbletea.NewView(bookmarks))
+	runner := tea.NewProgram(bubbletea.NewView(bookmarks), tea.WithContext(ctx))
 	state, err := runner.Run()
 	if err != nil {
 		return err

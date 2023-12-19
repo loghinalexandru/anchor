@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/loghinalexandru/anchor/internal/model"
 )
 
 const (
@@ -34,6 +35,13 @@ func update(msg tea.Msg, m *list.Model) tea.Cmd {
 			item := m.SelectedItem().(list.DefaultItem)
 			m.RemoveItem(m.Index())
 			return m.NewStatusMessage(fmt.Sprintf(msgStatus, item.Title()))
+		case "r":
+			m.SetShowHelp(false)
+			item := m.SelectedItem().(*model.Bookmark)
+			p := tea.NewProgram(NewInput(item.Title()))
+			s, _ := p.Run()
+			m.SetShowHelp(true)
+			item.SetTitle(s.(Input).model.Value())
 		}
 	}
 
