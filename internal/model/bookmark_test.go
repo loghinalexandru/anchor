@@ -27,8 +27,8 @@ func TestNew(t *testing.T) {
 		t.Error(cmp.Diff(title, got.Title))
 	}
 
-	if got.link != url {
-		t.Error(cmp.Diff(url, got.link))
+	if got.url != url {
+		t.Error(cmp.Diff(url, got.url))
 	}
 }
 
@@ -84,8 +84,8 @@ func TestNewFromLine(t *testing.T) {
 				t.Errorf("wrong deserialization: want %s , got: %s", c.title, bk.title)
 			}
 
-			if bk.link != c.url {
-				t.Errorf("wrong deserialization: want %s , got: %s", c.url, bk.link)
+			if bk.url != c.url {
+				t.Errorf("wrong deserialization: want %s , got: %s", c.url, bk.url)
 			}
 		})
 	}

@@ -18,7 +18,7 @@ var (
 
 type Bookmark struct {
 	title  string
-	link   string
+	url    string
 	client *http.Client
 }
 
@@ -29,7 +29,7 @@ func NewBookmark(rawURL string, opts ...func(*Bookmark)) (*Bookmark, error) {
 	}
 
 	res := &Bookmark{
-		link:   rawURL,
+		url:    rawURL,
 		client: http.DefaultClient,
 	}
 
@@ -79,11 +79,11 @@ func BookmarkLine(line string) (*Bookmark, error) {
 	}
 
 	name, _ := strconv.Unquote(parts[0])
-	link, _ := strconv.Unquote(parts[1])
+	rawURL, _ := strconv.Unquote(parts[1])
 
 	return &Bookmark{
 		title: strings.TrimSpace(name),
-		link:  strings.TrimSpace(link),
+		url:   strings.TrimSpace(rawURL),
 	}, nil
 }
 
@@ -92,9 +92,9 @@ var titleRegexp = regexp.MustCompile(`<title>(?P<title>.+?)</title>`)
 // If there is no html <title> tag or an error occurs
 // returns the bookmark link.
 func (b *Bookmark) fetchTitle() string {
-	result := b.link
+	result := b.url
 
-	req, err := http.NewRequest("GET", b.link, nil)
+	req, err := http.NewRequest("GET", b.url, nil)
 	if err != nil {
 		return result
 	}
@@ -120,7 +120,7 @@ func (b *Bookmark) fetchTitle() string {
 }
 
 func (b *Bookmark) String() string {
-	return fmt.Sprintf("%q %q\n", b.title, b.link)
+	return fmt.Sprintf("%q %q\n", b.title, b.url)
 }
 
 func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
@@ -134,9 +134,9 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 		return err
 	}
 
-	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.link)))
+	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.url)))
 	if exp.Match(content) {
-		return fmt.Errorf("%s: %w", b.link, ErrDuplicateBookmark)
+		return fmt.Errorf("%s: %w", b.url, ErrDuplicateBookmark)
 	}
 
 	_, err = fmt.Fprint(rw, b.String())
@@ -152,7 +152,7 @@ func (b *Bookmark) Title() string {
 }
 
 func (b *Bookmark) Description() string {
-	return b.link
+	return b.url
 }
 
 func (b *Bookmark) FilterValue() string {
