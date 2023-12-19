@@ -8,9 +8,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
 	"github.com/loghinalexandru/anchor/internal/config"
+	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
 	"github.com/peterbourgon/ff/v4"
@@ -54,7 +54,7 @@ func (v *viewCmd) handle(_ context.Context, _ []string) error {
 
 	scanner := bufio.NewScanner(fh)
 	for scanner.Scan() {
-		bk, err := bookmark.NewFromLine(scanner.Text())
+		bk, err := model.BookmarkLine(scanner.Text())
 		if err != nil {
 			return err
 		}
@@ -63,12 +63,12 @@ func (v *viewCmd) handle(_ context.Context, _ []string) error {
 	}
 
 	runner := tea.NewProgram(bubbletea.NewView(bookmarks))
-	model, err := runner.Run()
+	state, err := runner.Run()
 	if err != nil {
 		return err
 	}
 
-	view := model.(*bubbletea.View)
+	view := state.(*bubbletea.View)
 	if len(view.Bookmarks()) < len(bookmarks) && !output.Confirmation(fmt.Sprintf(msgDeleteBookmarks, len(bookmarks)-len(view.Bookmarks())), os.Stdin, os.Stdout) {
 		return nil
 	}

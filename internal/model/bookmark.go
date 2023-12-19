@@ -1,4 +1,4 @@
-package bookmark
+package model
 
 import (
 	"errors"
@@ -12,24 +12,24 @@ import (
 )
 
 var (
-	ErrDuplicate    = errors.New("duplicate bookmark")
-	ErrArgsMismatch = errors.New("mismatch in line arguments")
+	ErrDuplicateBookmark = errors.New("duplicate bookmark line")
+	ErrInvalidBookmark   = errors.New("cannot parse bookmark: arguments mismatch")
 )
 
 type Bookmark struct {
-	Name   string
-	URL    string
+	title  string
+	link   string
 	client *http.Client
 }
 
-func New(rawURL string, opts ...func(*Bookmark)) (*Bookmark, error) {
+func NewBookmark(rawURL string, opts ...func(*Bookmark)) (*Bookmark, error) {
 	_, err := url.ParseRequestURI(rawURL)
 	if err != nil {
 		return nil, err
 	}
 
 	res := &Bookmark{
-		URL:    rawURL,
+		link:   rawURL,
 		client: http.DefaultClient,
 	}
 
@@ -37,8 +37,8 @@ func New(rawURL string, opts ...func(*Bookmark)) (*Bookmark, error) {
 		opt(res)
 	}
 
-	if res.Name == "" {
-		res.Name = res.fetchTitle()
+	if res.title == "" {
+		res.title = res.fetchTitle()
 	}
 
 	return res, nil
@@ -47,7 +47,7 @@ func New(rawURL string, opts ...func(*Bookmark)) (*Bookmark, error) {
 func WithTitle(title string) func(*Bookmark) {
 	return func(b *Bookmark) {
 		if title != "" {
-			b.Name = title
+			b.title = title
 		}
 	}
 }
@@ -60,7 +60,7 @@ func WithClient(client *http.Client) func(*Bookmark) {
 	}
 }
 
-func NewFromLine(line string) (*Bookmark, error) {
+func BookmarkLine(line string) (*Bookmark, error) {
 	var quoted bool
 	var prev rune
 
@@ -75,24 +75,26 @@ func NewFromLine(line string) (*Bookmark, error) {
 	})
 
 	if len(parts) != 2 {
-		return nil, ErrArgsMismatch
+		return nil, ErrInvalidBookmark
 	}
 
 	name, _ := strconv.Unquote(parts[0])
 	link, _ := strconv.Unquote(parts[1])
 
 	return &Bookmark{
-		Name: strings.TrimSpace(name),
-		URL:  strings.TrimSpace(link),
+		title: strings.TrimSpace(name),
+		link:  strings.TrimSpace(link),
 	}, nil
 }
 
 var titleRegexp = regexp.MustCompile(`<title>(?P<title>.+?)</title>`)
 
+// If there is no html <title> tag or an error occurs
+// returns the bookmark link.
 func (b *Bookmark) fetchTitle() string {
-	result := b.URL
+	result := b.link
 
-	req, err := http.NewRequest("GET", b.URL, nil)
+	req, err := http.NewRequest("GET", b.link, nil)
 	if err != nil {
 		return result
 	}
@@ -103,22 +105,22 @@ func (b *Bookmark) fetchTitle() string {
 	}
 	defer res.Body.Close()
 
-	page, err := io.ReadAll(res.Body)
+	content, err := io.ReadAll(res.Body)
 	if err != nil {
 		return result
 	}
 
-	match := titleRegexp.FindSubmatch(page)
+	match := titleRegexp.FindSubmatch(content)
 
 	if len(match) == 0 {
-		return b.URL
+		return result
 	}
 
 	return string(match[1])
 }
 
 func (b *Bookmark) String() string {
-	return fmt.Sprintf("%q %q\n", b.Name, b.URL)
+	return fmt.Sprintf("%q %q\n", b.title, b.link)
 }
 
 func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
@@ -132,9 +134,9 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 		return err
 	}
 
-	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.URL)))
+	exp := regexp.MustCompile(fmt.Sprintf(`(?im)\s.%s.$`, regexp.QuoteMeta(b.link)))
 	if exp.Match(content) {
-		return fmt.Errorf("%s: %w", b.URL, ErrDuplicate)
+		return fmt.Errorf("%s: %w", b.link, ErrDuplicateBookmark)
 	}
 
 	_, err = fmt.Fprint(rw, b.String())
@@ -142,13 +144,13 @@ func (b *Bookmark) Write(rw io.ReadWriteSeeker) error {
 }
 
 func (b *Bookmark) Title() string {
-	return b.Name
+	return b.title
 }
 
 func (b *Bookmark) Description() string {
-	return b.URL
+	return b.link
 }
 
 func (b *Bookmark) FilterValue() string {
-	return b.Name
+	return b.title
 }

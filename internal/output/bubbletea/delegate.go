@@ -8,7 +8,6 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/loghinalexandru/anchor/internal/bookmark"
 )
 
 const (
@@ -29,12 +28,12 @@ func update(msg tea.Msg, m *list.Model) tea.Cmd {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter", " ":
-			item := m.SelectedItem().(*bookmark.Bookmark)
-			open(item.URL)
+			item := m.SelectedItem().(list.DefaultItem)
+			open(item.Description())
 		case "delete":
-			item := m.SelectedItem().(*bookmark.Bookmark)
+			item := m.SelectedItem().(list.DefaultItem)
 			m.RemoveItem(m.Index())
-			return m.NewStatusMessage(fmt.Sprintf(msgStatus, item.Name))
+			return m.NewStatusMessage(fmt.Sprintf(msgStatus, item.Title()))
 		}
 	}
 

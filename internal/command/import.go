@@ -8,9 +8,9 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
 	"github.com/loghinalexandru/anchor/internal/config"
+	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/peterbourgon/ff/v4"
 	"github.com/virtualtam/netscape-go/v2"
 )
@@ -71,17 +71,17 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 	}
 
 	for _, b := range node.Bookmarks {
-		entry, err := bookmark.New(b.URL, bookmark.WithTitle(b.Title))
+		entry, err := model.NewBookmark(b.URL, model.WithTitle(b.Title))
 		if err != nil {
 			return err
 		}
 
 		err = entry.Write(file)
-		if err != nil && !errors.Is(err, bookmark.ErrDuplicate) {
+		if err != nil && !errors.Is(err, model.ErrDuplicateBookmark) {
 			return err
 		}
 
-		if errors.Is(err, bookmark.ErrDuplicate) {
+		if errors.Is(err, model.ErrDuplicateBookmark) {
 			fmt.Println(err)
 		}
 	}

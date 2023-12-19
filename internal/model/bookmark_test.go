@@ -1,4 +1,4 @@
-package bookmark_test
+package model
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/loghinalexandru/anchor/internal/bookmark"
 )
 
 func TestNew(t *testing.T) {
@@ -19,17 +18,17 @@ func TestNew(t *testing.T) {
 	title := "test-title"
 	url := "https://google.com"
 
-	got, err := bookmark.New(url, bookmark.WithTitle(title))
+	got, err := NewBookmark(url, WithTitle(title))
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}
 
-	if got.Name != title {
+	if got.title != title {
 		t.Error(cmp.Diff(title, got.Title))
 	}
 
-	if got.URL != url {
-		t.Error(cmp.Diff(url, got.URL))
+	if got.link != url {
+		t.Error(cmp.Diff(url, got.link))
 	}
 }
 
@@ -38,7 +37,7 @@ func TestNewWithInvalidURL(t *testing.T) {
 
 	url := "invalid-url"
 
-	_, err := bookmark.New(url)
+	_, err := NewBookmark(url)
 	if err == nil {
 		t.Error("expected error not found")
 	}
@@ -76,17 +75,17 @@ func TestNewFromLine(t *testing.T) {
 
 	for _, c := range tsc {
 		t.Run(c.input, func(t *testing.T) {
-			bk, err := bookmark.NewFromLine(c.input)
+			bk, err := BookmarkLine(c.input)
 			if err != nil {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if bk.Name != c.title {
-				t.Errorf("wrong deserialization: want %s , got: %s", c.title, bk.Name)
+			if bk.title != c.title {
+				t.Errorf("wrong deserialization: want %s , got: %s", c.title, bk.title)
 			}
 
-			if bk.URL != c.url {
-				t.Errorf("wrong deserialization: want %s , got: %s", c.url, bk.URL)
+			if bk.link != c.url {
+				t.Errorf("wrong deserialization: want %s , got: %s", c.url, bk.link)
 			}
 		})
 	}
@@ -114,7 +113,7 @@ func TestString(t *testing.T) {
 
 	for _, c := range tsc {
 		t.Run(c.title, func(t *testing.T) {
-			bk, err := bookmark.New(c.url, bookmark.WithTitle(c.title))
+			bk, err := NewBookmark(c.url, WithTitle(c.title))
 			if err != nil {
 				t.Fatalf("unexpected error; got %q", err)
 			}
@@ -153,7 +152,7 @@ func TestTitleFromURL(t *testing.T) {
 
 	for _, c := range tcs {
 		t.Run(c.input, func(t *testing.T) {
-			bk, err := bookmark.New("https://google.com", bookmark.WithClient(newTestClient(func(req *http.Request) *http.Response {
+			bk, err := NewBookmark("https://google.com", WithClient(newTestClient(func(req *http.Request) *http.Response {
 				return &http.Response{
 					Body: io.NopCloser(bytes.NewBufferString(c.input)),
 				}
@@ -167,8 +166,8 @@ func TestTitleFromURL(t *testing.T) {
 				t.Fatalf("unexpected error; got %q", err)
 			}
 
-			if !cmp.Equal(bk.Name, c.want) {
-				t.Error(cmp.Diff(c.want, bk.Name))
+			if !cmp.Equal(bk.title, c.want) {
+				t.Error(cmp.Diff(c.want, bk.title))
 			}
 		})
 	}
@@ -185,7 +184,7 @@ func TestWrite(t *testing.T) {
 
 	title := "test-title \\n \"test\" asd"
 	want := "\"test-title \\\\n \\\"test\\\" asd\" \"https://google.com\"\n"
-	bk, err := bookmark.New("https://google.com", bookmark.WithTitle(title))
+	bk, err := NewBookmark("https://google.com", WithTitle(title))
 	if err != nil {
 		t.Fatalf("unexpected error; got %q", err)
 	}

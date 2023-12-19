@@ -6,7 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/loghinalexandru/anchor/internal/bookmark"
+	"github.com/loghinalexandru/anchor/internal/model"
 )
 
 type View struct {
@@ -41,11 +41,11 @@ func NewView(bookmarks []list.Item) *View {
 	}
 }
 
-func (v *View) Bookmarks() []*bookmark.Bookmark {
-	res := make([]*bookmark.Bookmark, len(v.bookmarks.Items()))
+func (v *View) Bookmarks() []*model.Bookmark {
+	res := make([]*model.Bookmark, len(v.bookmarks.Items()))
 
 	for i, bk := range v.bookmarks.Items() {
-		res[i] = bk.(*bookmark.Bookmark)
+		res[i] = bk.(*model.Bookmark)
 	}
 
 	return res

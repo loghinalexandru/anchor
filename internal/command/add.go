@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/loghinalexandru/anchor/internal/bookmark"
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
 	"github.com/loghinalexandru/anchor/internal/config"
+	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	ErrInvalidArgument = errors.New("missing bookmark URL from arguments")
+	ErrMissingURL = errors.New("missing bookmark URL from arguments")
 )
 
 type addCmd struct {
@@ -42,10 +42,14 @@ func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 func (add *addCmd) handle(_ context.Context, args []string) error {
 	if len(args) == 0 {
-		return ErrInvalidArgument
+		return ErrMissingURL
 	}
 
-	b, err := bookmark.New(args[0], bookmark.WithTitle(add.title), bookmark.WithClient(&http.Client{Timeout: clientTimeout}))
+	b, err := model.NewBookmark(
+		args[0],
+		model.WithTitle(add.title),
+		model.WithClient(&http.Client{Timeout: clientTimeout}))
+
 	if err != nil {
 		return err
 	}
