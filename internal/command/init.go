@@ -15,7 +15,7 @@ type initCmd struct{}
 func (init *initCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
 		Name:      initName,
-		Usage:     "init",
+		Usage:     "anchor init",
 		ShortHelp: "init a new empty home for anchor",
 		Flags:     ff.NewFlagSet("init").SetParent(parent),
 		Exec: func(ctx context.Context, args []string) error {

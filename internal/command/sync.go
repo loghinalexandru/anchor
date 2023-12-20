@@ -30,7 +30,7 @@ func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 	return &ff.Command{
 		Name:      syncName,
-		Usage:     "sync",
+		Usage:     "anchor sync [FLAGS]",
 		ShortHelp: "sync changes with configured remote",
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {

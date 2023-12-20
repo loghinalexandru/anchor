@@ -28,7 +28,7 @@ type importCmd struct{}
 func (imp *importCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
 		Name:      importName,
-		Usage:     "import",
+		Usage:     "anchor import [PATH]",
 		ShortHelp: "import bookmarks from a file",
 		Flags:     ff.NewFlagSet("import").SetParent(parent),
 		Exec:      imp.handle,

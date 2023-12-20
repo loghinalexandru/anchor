@@ -67,6 +67,7 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 	storer := storage.New(storage.Parse(root.storage))
 	for _, c := range root.cmd.Subcommands {
 		switch c.Name {
+		// Skip updateMiddleware for init command.
 		case initName:
 			c.Exec = contextMiddleware(c.Exec)
 		default:

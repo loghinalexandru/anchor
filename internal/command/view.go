@@ -31,7 +31,7 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 	return &ff.Command{
 		Name:      viewName,
-		Usage:     "view",
+		Usage:     "anchor view [FLAGS]",
 		ShortHelp: "view existing bookmarks",
 		Flags:     flags,
 		Exec:      v.handle,

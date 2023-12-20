@@ -24,7 +24,7 @@ func (del *deleteCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 	return &ff.Command{
 		Name:      deleteName,
-		Usage:     "delete",
+		Usage:     "anchor delete [FLAGS]",
 		ShortHelp: "remove a bookmark",
 		Flags:     flags,
 		Exec:      del.handle,

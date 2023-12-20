@@ -19,7 +19,7 @@ type treeCmd struct{}
 func (tree *treeCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
 		Name:      treeName,
-		Usage:     "tree",
+		Usage:     "anchor tree",
 		ShortHelp: "list available labels in a tree structure",
 		Flags:     ff.NewFlagSet("tree").SetParent(parent),
 		Exec:      tree.handle,

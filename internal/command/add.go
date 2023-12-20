@@ -34,7 +34,7 @@ func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 	return &ff.Command{
 		Name:      addName,
-		Usage:     "add",
+		Usage:     "anchor add [FLAGS]",
 		ShortHelp: "add a bookmark with set labels",
 		Flags:     flags,
 		Exec:      add.handle,

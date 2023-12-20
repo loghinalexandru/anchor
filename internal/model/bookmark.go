@@ -89,8 +89,8 @@ func BookmarkLine(line string) (*Bookmark, error) {
 
 var titleRegexp = regexp.MustCompile(`<title>(?P<title>.+?)</title>`)
 
-// If there is no html <title> tag or an error occurs
-// returns the bookmark link.
+// fetchTitle makes a http request to get the html from b.url is no html <title> tag or an error occurs.
+// If no html <title> tag is present or an error occurs, returns b.url.
 func (b *Bookmark) fetchTitle() string {
 	result := b.url
 
