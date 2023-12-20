@@ -10,11 +10,15 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
+const (
+	treeName = "tree"
+)
+
 type treeCmd struct{}
 
 func (tree *treeCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
-		Name:      "tree",
+		Name:      treeName,
 		Usage:     "tree",
 		ShortHelp: "list available labels in a tree structure",
 		Flags:     ff.NewFlagSet("tree").SetParent(parent),

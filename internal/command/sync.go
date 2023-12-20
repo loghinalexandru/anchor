@@ -7,11 +7,11 @@ import (
 
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
-	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 	"github.com/peterbourgon/ff/v4"
 )
 
 const (
+	syncName            = "sync"
 	msgNothingToSync    = "Nothing to sync, there are no local changes."
 	msgSyncConfirmation = "Sync changes with remote?"
 )
@@ -29,7 +29,7 @@ func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	flags.StringVar(&sync.msg, 'm', "message", config.StdSyncMsg, "Optional sync message")
 
 	return &ff.Command{
-		Name:      "sync",
+		Name:      syncName,
 		Usage:     "sync",
 		ShortHelp: "sync changes with configured remote",
 		Flags:     flags,
@@ -54,7 +54,7 @@ func (sync *syncCmd) handle(ctx rootContext, _ []string) error {
 		_, _ = fmt.Fprint(os.Stdout, status)
 	}
 
-	if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout, style.Nop); !ok {
+	if ok := output.Confirm(msgSyncConfirmation); !ok {
 		return nil
 	}
 

@@ -11,7 +11,7 @@ type RenderFunc func(in string) string
 
 var (
 	stdStyle       = lipgloss.NewStyle().Margin(2, 2, 2, 2)
-	stdPromptStyle = lipgloss.NewStyle().Margin(0, 2, 0, 2)
+	stdPromptStyle = lipgloss.NewStyle().Margin(0, 0, 0, 2)
 )
 
 func Nop(in string) string {

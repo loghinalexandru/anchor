@@ -4,19 +4,30 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 )
 
-const maxRetries = 3
+func Confirm(prompt string) bool {
+	return Confirmer{
+		MaxRetries: 3,
+		Renderer:   style.Nop,
+	}.Confirm(prompt, os.Stdin, os.Stdout)
+}
 
-func Confirmation(prompt string, in io.Reader, out io.Writer, renderer style.RenderFunc) bool {
+type Confirmer struct {
+	MaxRetries int
+	Renderer   style.RenderFunc
+}
+
+func (c Confirmer) Confirm(prompt string, in io.Reader, out io.Writer) bool {
 	reader := bufio.NewReader(in)
 	retries := 0
 
-	for retries < maxRetries {
-		_, err := fmt.Fprint(out, renderer(fmt.Sprintf("%s [y/n]: ", prompt)))
+	for retries < c.MaxRetries {
+		_, err := fmt.Fprint(out, c.Renderer(fmt.Sprintf("%s [y/n]: ", prompt)))
 		if err != nil {
 			return false
 		}
@@ -30,13 +41,13 @@ func Confirmation(prompt string, in io.Reader, out io.Writer, renderer style.Ren
 		case "y", "yes":
 			return true
 		case "n", "no":
-			_, _ = fmt.Fprintln(out, renderer("Aborting..."))
+			_, _ = fmt.Fprintln(out, c.Renderer("Aborting..."))
 			return false
 		}
 
 		retries++
 	}
 
-	_, _ = fmt.Fprintln(out, renderer("Exceeded retry count"))
+	_, _ = fmt.Fprintln(out, c.Renderer("Exceeded retry count"))
 	return false
 }

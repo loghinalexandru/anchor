@@ -2,17 +2,16 @@ package command
 
 import (
 	"context"
-	"os"
 
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
-	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 	"github.com/peterbourgon/ff/v4/ffyaml"
 )
 
 const (
+	rootName        = "anchor"
 	msgUpdateFailed = "Failed pulling latest changes. Continue operation?"
 )
 
@@ -37,7 +36,7 @@ func newRoot() *rootCmd {
 	rootFlags.StringVar(&root.storage, 's', "storage", "local", "Set storage type")
 
 	root.cmd = &ff.Command{
-		Name:  "anchor",
+		Name:  rootName,
 		Usage: "anchor [FLAGS] <SUBCOMMAND>",
 		Flags: rootFlags,
 	}
@@ -67,11 +66,12 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 
 	storer := storage.New(storage.Parse(root.storage))
 	for _, c := range root.cmd.Subcommands {
-		if updater, ok := storer.(Updater); ok {
-			c.Exec = updaterMiddleware(c.Exec, updater)
+		switch c.Name {
+		case initName:
+			c.Exec = contextMiddleware(c.Exec)
+		default:
+			c.Exec = contextMiddleware(updaterMiddleware(c.Exec, storer))
 		}
-
-		c.Exec = contextHandlerMiddleware(c.Exec)
 	}
 
 	cmdCtx := rootContext{
@@ -84,11 +84,16 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 
 type handlerFunc func(ctx context.Context, args []string) error
 
-func updaterMiddleware(next handlerFunc, updater Updater) handlerFunc {
+func updaterMiddleware(next handlerFunc, storer storage.Storer) handlerFunc {
+	updater, ok := storer.(Updater)
+	if !ok {
+		return next
+	}
+
 	return func(ctx context.Context, args []string) error {
 		err := updater.Update()
 		if err != nil {
-			if ok := output.Confirmation(msgUpdateFailed, os.Stdin, os.Stdout, style.Nop); !ok {
+			if ok := output.Confirm(msgUpdateFailed); !ok {
 				return err
 			}
 		}
@@ -97,7 +102,7 @@ func updaterMiddleware(next handlerFunc, updater Updater) handlerFunc {
 	}
 }
 
-func contextHandlerMiddleware(next handlerFunc) handlerFunc {
+func contextMiddleware(next handlerFunc) handlerFunc {
 	return func(ctx context.Context, args []string) error {
 		res := make(chan error, 1)
 

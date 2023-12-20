@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	viewName        = "view"
 	msgApplyChanges = "You are about to apply changes from previous operation. Proceed?"
 )
 
@@ -29,7 +30,7 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	flags.StringSetVar(&v.labels, 'l', "label", "specify label hierarchy")
 
 	return &ff.Command{
-		Name:      "view",
+		Name:      viewName,
 		Usage:     "view",
 		ShortHelp: "view existing bookmarks",
 		Flags:     flags,
@@ -69,7 +70,12 @@ func (v *viewCmd) handle(ctx context.Context, _ []string) error {
 	}
 
 	view := state.(*bubbletea.View)
-	if view.Dirty() && !output.Confirmation(msgApplyChanges, os.Stdin, os.Stdout, style.Prompt) {
+	confirmer := output.Confirmer{
+		MaxRetries: 3,
+		Renderer:   style.Prompt,
+	}
+
+	if view.Dirty() && !confirmer.Confirm(msgApplyChanges, os.Stdin, os.Stdout) {
 		return nil
 	}
 

@@ -6,11 +6,15 @@ import (
 	"github.com/peterbourgon/ff/v4"
 )
 
+const (
+	initName = "init"
+)
+
 type initCmd struct{}
 
 func (init *initCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
-		Name:      "init",
+		Name:      initName,
 		Usage:     "init",
 		ShortHelp: "init a new empty home for anchor",
 		Flags:     ff.NewFlagSet("init").SetParent(parent),

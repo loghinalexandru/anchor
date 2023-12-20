@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	addName       = "add"
 	clientTimeout = 5 * time.Second
 )
 
@@ -32,7 +33,7 @@ func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	flags.StringVar(&add.title, 't', "title", "", "add custom title")
 
 	return &ff.Command{
-		Name:      "add",
+		Name:      addName,
 		Usage:     "add",
 		ShortHelp: "add a bookmark with set labels",
 		Flags:     flags,

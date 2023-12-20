@@ -6,11 +6,11 @@ import (
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
 	"github.com/loghinalexandru/anchor/internal/output"
-	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 	"github.com/peterbourgon/ff/v4"
 )
 
 const (
+	deleteName     = "delete"
 	msgDeleteLabel = "You are about to delete the label and associated bookmarks. Proceed?"
 )
 
@@ -23,7 +23,7 @@ func (del *deleteCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	flags.StringSetVar(&del.labels, 'l', "label", "add label in order of appearance")
 
 	return &ff.Command{
-		Name:      "delete",
+		Name:      deleteName,
 		Usage:     "delete",
 		ShortHelp: "remove a bookmark",
 		Flags:     flags,
@@ -34,7 +34,7 @@ func (del *deleteCmd) manifest(parent *ff.FlagSet) *ff.Command {
 func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
 	path := label.Filepath(del.labels)
 
-	ok := output.Confirmation(msgDeleteLabel, os.Stdin, os.Stdout, style.Nop)
+	ok := output.Confirm(msgDeleteLabel)
 	if !ok {
 		return nil
 	}

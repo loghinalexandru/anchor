@@ -15,6 +15,10 @@ import (
 	"github.com/virtualtam/netscape-go/v2"
 )
 
+const (
+	importName = "import"
+)
+
 var (
 	ErrInvalidImportFile = errors.New("invalid import file")
 )
@@ -23,7 +27,7 @@ type importCmd struct{}
 
 func (imp *importCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
-		Name:      "import",
+		Name:      importName,
 		Usage:     "import",
 		ShortHelp: "import bookmarks from a file",
 		Flags:     ff.NewFlagSet("import").SetParent(parent),
