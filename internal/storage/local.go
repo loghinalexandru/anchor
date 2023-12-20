@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"os"
 
 	"github.com/loghinalexandru/anchor/internal/config"
@@ -16,16 +17,19 @@ func newLocalStorage() *localStorage {
 	}
 }
 
-func (*localStorage) Init(_ ...string) error {
-	dir := config.RootDir()
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, os.ModePerm)
+func (l *localStorage) Init(_ ...string) error {
+	if _, err := os.Stat(l.path); os.IsNotExist(err) {
+		err = os.Mkdir(l.path, os.ModePerm)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (*localStorage) Diff() (string, error) {
+	return "", errors.New("running on local storage type, command has no effect")
 }
 
 func (*localStorage) Store(_ string) error {
