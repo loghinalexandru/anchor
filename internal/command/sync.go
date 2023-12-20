@@ -7,6 +7,7 @@ import (
 
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
+	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 	"github.com/peterbourgon/ff/v4"
 )
 
@@ -53,7 +54,7 @@ func (sync *syncCmd) handle(ctx rootContext, _ []string) error {
 		_, _ = fmt.Fprint(os.Stdout, status)
 	}
 
-	if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout); !ok {
+	if ok := output.Confirmation(msgSyncConfirmation, os.Stdin, os.Stdout, style.Nop); !ok {
 		return nil
 	}
 

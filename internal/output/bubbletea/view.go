@@ -5,13 +5,11 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/paginator"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/loghinalexandru/anchor/internal/model"
+	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 )
 
 const (
@@ -21,46 +19,19 @@ const (
 type View struct {
 	input     textinput.Model
 	bookmarks list.Model
-	style     lipgloss.Style
 	dirty     bool
 }
 
 func NewView(bookmarks []list.Item) *View {
-	d := list.NewDefaultDelegate()
-	d.Styles.SelectedTitle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.NoColor{})
-	d.Styles.SelectedDesc = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.NoColor{})
+	del := list.NewDefaultDelegate()
+	style.ApplyToDelegate(&del)
 
-	viewList := list.New(bookmarks, d, 0, 0)
-	viewList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
-	viewList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
-
-	viewList.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			key.NewBinding(key.WithKeys("enter", "space"), key.WithHelp("enter", "open")),
-			key.NewBinding(key.WithKeys("delete", "d"), key.WithHelp("d/del", "delete")),
-			key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "rename")),
-		}
-	}
-
-	viewList.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			key.NewBinding(key.WithKeys("enter", "space"), key.WithHelp("enter/space", "open in browser")),
-			key.NewBinding(key.WithKeys("delete", "d"), key.WithHelp("d/del", "remove bookmark")),
-			key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "rename bookmark")),
-		}
-	}
-
-	viewList.Title = "Bookmarks"
-	viewList.InfiniteScrolling = true
-	viewList.Paginator.Type = paginator.Arabic
-	viewList.Paginator.ArabicFormat = "%d/%d \u2693"
-	viewList.FilterInput.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
-	viewList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.NoColor{})
+	viewList := list.New(bookmarks, del, 0, 0)
+	style.ApplyToList(&viewList)
 
 	return &View{
 		input:     textinput.New(),
 		bookmarks: viewList,
-		style:     lipgloss.NewStyle().Margin(2, 0, 2, 2),
 	}
 }
 
@@ -86,12 +57,12 @@ func (v *View) View() string {
 	if v.input.Focused() {
 		v.bookmarks.SetShowPagination(false)
 		v.bookmarks.SetShowHelp(false)
-		return v.style.Render(v.bookmarks.View() + "\n" + v.input.View())
+		return style.Default().Render(v.bookmarks.View() + "\n" + v.input.View())
 	}
 
 	v.bookmarks.SetShowPagination(true)
 	v.bookmarks.SetShowHelp(true)
-	return v.style.Render(v.bookmarks.View())
+	return style.Default().Render(v.bookmarks.View())
 }
 
 func (v *View) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -100,10 +71,13 @@ func (v *View) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		x, y := v.style.GetFrameSize()
-		v.bookmarks.SetSize(msg.Width-x, msg.Height-y)
-		v.bookmarks, viewCmd = v.bookmarks.Update(msg)
-		return v, viewCmd
+		x, y := style.Default().GetFrameSize()
+		width := msg.Width - x
+		height := msg.Height - y
+		v.input.Width = width - x
+		v.bookmarks.SetSize(width, height)
+		v.bookmarks, inputCmd = v.bookmarks.Update(msg)
+		v.input, viewCmd = v.input.Update(msg)
 	case tea.KeyMsg:
 		if v.input.Focused() {
 			v.input, inputCmd = v.handleInput(msg)

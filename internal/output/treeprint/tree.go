@@ -20,6 +20,8 @@ func Generate(fsys fs.FS) string {
 	known := map[string]treeprint.Tree{}
 	tree := treeprint.NewWithRoot(filepath.Base(config.RootDir()))
 
+	// For each dir in fsys read and compute number of lines together
+	// with the tree from the flat structure of the file names.
 	dd, _ := fs.ReadDir(fsys, ".")
 	for _, d := range dd {
 		if d.IsDir() {
@@ -33,11 +35,15 @@ func Generate(fsys fs.FS) string {
 			f.Close()
 		}
 
+		// Split the file name by config.StdLabelSeparator and
+		// create a tree root node from first label.
 		labels := strings.Split(d.Name(), config.StdLabelSeparator)
 		if _, ok := known[labels[0]]; !ok {
 			known[labels[0]] = branch(tree, lineCount, labels[0], len(labels) == 1)
 		}
 
+		// Go over the rest of the labels and create a new tree node
+		// with the previous labels as parent if it was not seen before.
 		for i := 1; i < len(labels); i++ {
 			curr := strings.Join(labels[:i+1], config.StdLabelSeparator)
 			if _, ok := known[curr]; !ok {
@@ -50,6 +56,7 @@ func Generate(fsys fs.FS) string {
 	return tree.String()
 }
 
+// Add line count metadata if the label is the last one.
 func branch(root treeprint.Tree, lineCount int, label string, leaf bool) treeprint.Tree {
 	if leaf {
 		return root.AddMetaBranch(fmt.Sprintf(msgMetadata, lineCount), label)

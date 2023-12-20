@@ -12,11 +12,12 @@ import (
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
+	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 	"github.com/peterbourgon/ff/v4"
 )
 
 const (
-	msgDeleteBookmarks = "You are about to apply changes from previous operation. Proceed?"
+	msgApplyChanges = "You are about to apply changes from previous operation. Proceed?"
 )
 
 type viewCmd struct {
@@ -68,7 +69,7 @@ func (v *viewCmd) handle(ctx context.Context, _ []string) error {
 	}
 
 	view := state.(*bubbletea.View)
-	if view.Dirty() && !output.Confirmation(msgDeleteBookmarks, os.Stdin, os.Stdout) {
+	if view.Dirty() && !output.Confirmation(msgApplyChanges, os.Stdin, os.Stdout, style.Prompt) {
 		return nil
 	}
 

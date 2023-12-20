@@ -6,6 +6,7 @@ import (
 
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
+	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 	"github.com/loghinalexandru/anchor/internal/storage"
 	"github.com/peterbourgon/ff/v4"
 	"github.com/peterbourgon/ff/v4/ffyaml"
@@ -87,7 +88,7 @@ func updaterMiddleware(next handlerFunc, updater Updater) handlerFunc {
 	return func(ctx context.Context, args []string) error {
 		err := updater.Update()
 		if err != nil {
-			if ok := output.Confirmation(msgUpdateFailed, os.Stdin, os.Stdout); !ok {
+			if ok := output.Confirmation(msgUpdateFailed, os.Stdin, os.Stdout, style.Nop); !ok {
 				return err
 			}
 		}

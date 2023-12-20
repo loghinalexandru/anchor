@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/loghinalexandru/anchor/internal/output/bubbletea/style"
 )
 
-func Confirmation(s string, in io.Reader, out io.Writer) bool {
-	reader := bufio.NewReader(in)
-	retryMax := 3
+const maxRetries = 3
 
-	for retryMax > 0 {
-		_, err := fmt.Fprintf(out, `%s [y/n]: `, s)
+func Confirmation(prompt string, in io.Reader, out io.Writer, renderer style.RenderFunc) bool {
+	reader := bufio.NewReader(in)
+	retries := 0
+
+	for retries < maxRetries {
+		_, err := fmt.Fprint(out, renderer(fmt.Sprintf("%s [y/n]: ", prompt)))
 		if err != nil {
 			return false
 		}
@@ -26,13 +30,13 @@ func Confirmation(s string, in io.Reader, out io.Writer) bool {
 		case "y", "yes":
 			return true
 		case "n", "no":
-			_, _ = fmt.Fprintln(out, "Aborting...")
+			_, _ = fmt.Fprintln(out, renderer("Aborting..."))
 			return false
 		}
 
-		retryMax--
+		retries++
 	}
 
-	_, _ = fmt.Fprintln(out, "Exceeded retry count")
+	_, _ = fmt.Fprintln(out, renderer("Exceeded retry count"))
 	return false
 }
