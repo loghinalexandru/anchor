@@ -69,7 +69,8 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 		labels = append(labels, node.Name)
 	}
 
-	file, err := os.OpenFile(label.Filepath(labels), os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
+	// This needs to format labels, split label.Filename for that
+	file, err := os.OpenFile(label.Filename(labels), os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
 	if err != nil {
 		return err
 	}
@@ -77,11 +78,13 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 	for _, b := range node.Bookmarks {
 		entry, err := model.NewBookmark(b.URL, model.WithTitle(b.Title))
 		if err != nil {
+			file.Close()
 			return err
 		}
 
 		err = entry.Write(file)
 		if err != nil && !errors.Is(err, model.ErrDuplicateBookmark) {
+			file.Close()
 			return err
 		}
 

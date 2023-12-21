@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
-	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -46,22 +45,15 @@ func (add *addCmd) handle(_ context.Context, args []string) error {
 		return ErrMissingURL
 	}
 
+	file, err := label.Open(add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
+	if err != nil {
+		return err
+	}
+
 	b, err := model.NewBookmark(
 		args[0],
 		model.WithTitle(add.title),
 		model.WithClient(&http.Client{Timeout: clientTimeout}))
-
-	if err != nil {
-		return err
-	}
-
-	err = label.Validate(add.labels)
-	if err != nil {
-		return err
-	}
-
-	path := label.Filepath(add.labels)
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
 	if err != nil {
 		return err
 	}

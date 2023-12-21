@@ -3,6 +3,8 @@ package label
 import (
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -16,18 +18,43 @@ var (
 
 var notLabelRegexp = regexp.MustCompile(`([^a-z0-9-]|^$)`)
 
-func Validate(labels []string) error {
-	var result error
-	for _, l := range labels {
-		if notLabelRegexp.MatchString(l) {
-			result = errors.Join(result, fmt.Errorf("%q: %w", l, ErrInvalidLabel))
-		}
+// Open validates and opens the file constructed from the []labels hierarchy.
+// If the file does not exist or some labels are invalid, returns ErrInvalidLabel.
+// If os.O_CREATE flag is passed and the file does not exist,
+// it is created with mode perm config.StdFileMode.
+func Open(labels []string, flag int) (*os.File, error) {
+	err := validate(labels)
+	if err != nil {
+		return nil, err
 	}
 
-	return result
+	fh, err := os.OpenFile(Filename(labels), flag, config.StdFileMode)
+	if err != nil && errors.Is(err, fs.ErrNotExist) {
+		return nil, ErrInvalidLabel
+	}
+
+	return fh, err
 }
 
-func Filepath(labels []string) string {
+// Remove validates and removes the file constructed from the []labels hierarchy.
+// If the file does not exist, has no effect.
+func Remove(labels []string) error {
+	err := validate(labels)
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(Filename(labels))
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+
+	return nil
+}
+
+// Filename returns file name from provided []labels hierarchy.
+// If there are invalid characters in the labels, they are stripped.
+func Filename(labels []string) string {
 	rootDir := config.RootDir()
 
 	if len(labels) == 0 {
@@ -40,4 +67,15 @@ func Filepath(labels []string) string {
 
 	filename := strings.Join(labels, config.StdLabelSeparator)
 	return filepath.Join(rootDir, strings.ToLower(filename))
+}
+
+func validate(labels []string) error {
+	var result error
+	for _, l := range labels {
+		if notLabelRegexp.MatchString(l) {
+			result = errors.Join(result, fmt.Errorf("%q: %w", l, ErrInvalidLabel))
+		}
+	}
+
+	return result
 }

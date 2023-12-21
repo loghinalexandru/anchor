@@ -70,6 +70,7 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 	}
 	defer fh.Close()
 
+	// Config file might not exist, ignore errors if so.
 	storer := storage.New(storage.Local)
 	ffyaml.Parse(fh, func(key, value string) error {
 		if key == config.StdStorageKey {

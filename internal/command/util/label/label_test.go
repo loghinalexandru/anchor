@@ -29,7 +29,7 @@ func TestFilename(t *testing.T) {
 
 	for k, c := range tsc {
 		t.Run(k, func(t *testing.T) {
-			got := Filepath(c.labels)
+			got := Filename(c.labels)
 			if c.want != filepath.Base(got) {
 				t.Errorf("unexpected filename from label(s); want %q, got %q", c.want, filepath.Base(got))
 			}
@@ -48,7 +48,7 @@ func TestValidateGoodLabels(t *testing.T) {
 
 	for k, c := range tsc {
 		t.Run(k, func(t *testing.T) {
-			err := Validate(c)
+			err := validate(c)
 			if err != nil {
 				t.Errorf("unexpected error on valid label(s); %q", err)
 			}
@@ -68,7 +68,7 @@ func TestValidateBadLabels(t *testing.T) {
 
 	for k, c := range tsc {
 		t.Run(k, func(t *testing.T) {
-			err := Validate(c)
+			err := validate(c)
 			if !errors.Is(err, ErrInvalidLabel) {
 				t.Errorf("missing error on invalid label(s); %q", c)
 			}

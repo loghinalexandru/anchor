@@ -8,7 +8,6 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
-	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
@@ -39,12 +38,7 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 }
 
 func (v *viewCmd) handle(ctx context.Context, _ []string) error {
-	err := label.Validate(v.labels)
-	if err != nil {
-		return err
-	}
-
-	fh, err := os.OpenFile(label.Filepath(v.labels), os.O_RDWR, config.StdFileMode)
+	fh, err := label.Open(v.labels, os.O_RDWR)
 	if err != nil {
 		return err
 	}

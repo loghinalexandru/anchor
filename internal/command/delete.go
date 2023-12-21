@@ -2,9 +2,6 @@ package command
 
 import (
 	"context"
-	"errors"
-	"io/fs"
-	"os"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
 	"github.com/loghinalexandru/anchor/internal/output"
@@ -34,17 +31,10 @@ func (del *deleteCmd) manifest(parent *ff.FlagSet) *ff.Command {
 }
 
 func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
-	path := label.Filepath(del.labels)
-
 	ok := output.Confirm(msgDeleteLabel)
 	if !ok {
 		return nil
 	}
 
-	err = os.Remove(path)
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return err
-	}
-
-	return nil
+	return label.Remove(del.labels)
 }
