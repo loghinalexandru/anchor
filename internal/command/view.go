@@ -52,7 +52,6 @@ func (v *viewCmd) handle(ctx context.Context, _ []string) error {
 	defer fh.Close()
 
 	var bookmarks []list.Item
-
 	scanner := bufio.NewScanner(fh)
 	for scanner.Scan() {
 		bk, err := model.BookmarkLine(scanner.Text())

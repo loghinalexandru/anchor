@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ErrInvalidLabel = errors.New("invalid label passed")
+	ErrInvalidLabel = errors.New("invalid or missing label passed")
 )
 
 var notLabelRegexp = regexp.MustCompile(`([^a-z0-9-]|^$)`)

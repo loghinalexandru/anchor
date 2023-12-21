@@ -2,6 +2,9 @@ package command
 
 import (
 	"context"
+	"errors"
+	"io/fs"
+	"os"
 
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
@@ -19,25 +22,25 @@ type Updater interface {
 	Update() error
 }
 
+// rootContext is a context.Context wrapper for
+// type safety and to avoid key-value pairs.
 type rootContext struct {
 	context.Context
 	storer storage.Storer
 }
 
 type rootCmd struct {
-	storage string
-	cmd     *ff.Command
+	cmd *ff.Command
 }
 
 func newRoot() *rootCmd {
 	root := &rootCmd{}
 
 	rootFlags := ff.NewFlagSet("anchor")
-	rootFlags.StringVar(&root.storage, 's', "storage", "local", "Set storage type")
 
 	root.cmd = &ff.Command{
 		Name:  rootName,
-		Usage: "anchor [FLAGS] <SUBCOMMAND>",
+		Usage: "anchor <SUBCOMMAND>",
 		Flags: rootFlags,
 	}
 
@@ -49,26 +52,41 @@ func newRoot() *rootCmd {
 		(&treeCmd{}).manifest(rootFlags),
 		(&syncCmd{}).manifest(rootFlags),
 		(&importCmd{}).manifest(rootFlags),
+		(&versionCmd{}).manifest(rootFlags),
 	}
 
 	return root
 }
 
 func (root *rootCmd) handle(ctx context.Context, args []string) error {
-	err := root.cmd.Parse(args,
-		ff.WithConfigFile(config.FilePath()),
-		ff.WithConfigFileParser(ffyaml.Parse),
-		ff.WithConfigAllowMissingFile())
-
+	err := root.cmd.Parse(args)
 	if err != nil {
 		return err
 	}
 
-	storer := storage.New(storage.Parse(root.storage))
+	fh, err := os.Open(config.FilePath())
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+	defer fh.Close()
+
+	storer := storage.New(storage.Local)
+	ffyaml.Parse(fh, func(key, value string) error {
+		if key == config.StdStorageKey {
+			storer = storage.New(storage.Parse(value))
+		}
+
+		return nil
+	})
+
+	// Add appropriate middleware for each subcommand
 	for _, c := range root.cmd.Subcommands {
 		switch c.Name {
-		// Skip updateMiddleware for init command.
+		// Skip updateMiddleware for commands that
+		// do not need to fetch from remote.
 		case initName:
+			c.Exec = contextMiddleware(c.Exec)
+		case versionName:
 			c.Exec = contextMiddleware(c.Exec)
 		default:
 			c.Exec = contextMiddleware(updaterMiddleware(c.Exec, storer))

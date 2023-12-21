@@ -2,6 +2,8 @@ package command
 
 import (
 	"context"
+	"errors"
+	"io/fs"
 	"os"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
@@ -40,7 +42,7 @@ func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
 	}
 
 	err = os.Remove(path)
-	if !os.IsNotExist(err) {
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
 
