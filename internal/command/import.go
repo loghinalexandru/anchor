@@ -69,8 +69,7 @@ func traversal(rootDir string, labels []string, node netscape.Folder) error {
 		labels = append(labels, node.Name)
 	}
 
-	// This needs to format labels, split label.Filename for that
-	file, err := os.OpenFile(label.Filename(labels), os.O_APPEND|os.O_CREATE|os.O_RDWR, config.StdFileMode)
+	file, err := label.Open(label.Format(labels), os.O_APPEND|os.O_CREATE|os.O_RDWR)
 	if err != nil {
 		return err
 	}

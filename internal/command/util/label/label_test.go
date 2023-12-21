@@ -4,9 +4,11 @@ import (
 	"errors"
 	"path/filepath"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
-func TestFilename(t *testing.T) {
+func TestName(t *testing.T) {
 	t.Parallel()
 
 	tsc := map[string]struct {
@@ -29,9 +31,40 @@ func TestFilename(t *testing.T) {
 
 	for k, c := range tsc {
 		t.Run(k, func(t *testing.T) {
-			got := Filename(c.labels)
+			got := name(c.labels)
 			if c.want != filepath.Base(got) {
 				t.Errorf("unexpected filename from label(s); want %q, got %q", c.want, filepath.Base(got))
+			}
+		})
+	}
+}
+
+func TestFormat(t *testing.T) {
+	t.Parallel()
+
+	tsc := map[string]struct {
+		labels []string
+		want   []string
+	}{
+		"whitespace-label": {
+			labels: []string{"  \n"},
+			want:   []string{""},
+		},
+		"single-label": {
+			labels: []string{".Dotnet-TEST!@#"},
+			want:   []string{"dotnet-test"},
+		},
+		"multi-label": {
+			labels: []string{"!@#$%^&*();'proMethe%us", ".. gola ng"},
+			want:   []string{"prometheus", "golang"},
+		},
+	}
+
+	for k, c := range tsc {
+		t.Run(k, func(t *testing.T) {
+			got := Format(c.labels)
+			if !cmp.Equal(c.want, got) {
+				t.Errorf("unexpected format for labels; want %q, got %q", c.want, got)
 			}
 		})
 	}
