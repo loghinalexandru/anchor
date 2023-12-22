@@ -19,7 +19,7 @@ jobs:
     - name: Build for darwin/arm64
       run: env GOOS=darwin GOARCH=arm64 go build -o "anchor_darwin-arm64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
     - name: Build for darwin/amd64
-      run: env GOOS=darwin GOARCH=amd64 go build -o "anchor_darwin-arm64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+      run: env GOOS=darwin GOARCH=amd64 go build -o "anchor_darwin-amd64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
     - name: Build for linux/amd64
       run: env GOOS=linux GOARCH=amd64 go build -o "anchor_linux-amd64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
     - name: Build for windows/amd64
