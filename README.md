@@ -27,7 +27,7 @@
 </div>
 
 ---
-**Anchor** is a simple CLI tool for managing bookmarks for all platforms. It supports a custom and intuitive TUI via [bubbletea](https://github.com/charmbracelet/bubbletea) and automatic syncing with local or [git](https://git-scm.com/) as a back-end storage.
+**Anchor** is a simple CLI tool for managing bookmarks for all platforms. It supports a custom and intuitive TUI via [bubbletea](https://github.com/charmbracelet/bubbletea) and automatic syncing with git via [go-git](https://github.com/go-git/go-git) as a backing storage.
 
 # Installation
 
@@ -41,13 +41,13 @@ Prerequisites to build anchor from source:
 
 Build and place it under ```$GOBIN```:
 
-``` go
+```text
  go install github.com/loghinalexandru/anchor@latest
 ```
 
 # Storage
 
-For now by default it uses the local file system as storage. You can specify what kind of back-end storage you want via a config file explained in the next section.
+For now by default it uses the local file system as storage. You can specify what kind of backing storage you want via a config file explained in the next section.
 
 Valid options:
 
@@ -56,12 +56,11 @@ Valid options:
 
 # Usage
 
-In order to use **Anchor** you first need to create a home for all your bookmarks. Before any operation you need to initialize the storage. For this run:
+In order to use **anchor** you first need to create a home for all your bookmarks. Before any operation you need to initialize the storage. For this run:
 
-``` bash
+```text
 anchor init
 ```
-
 
 In order to switch to **git** or any other storage, create a file under ```~/.anchor/config/anchor.yaml``` with the following config:
 
@@ -69,4 +68,6 @@ In order to switch to **git** or any other storage, create a file under ```~/.an
 storage: git
 ```
 
-This is a one-time-only since the file will be persisted on the preffered back-end storage.
+For this to work you need to have a repository already created and a **ssh** key already setup. The authentication is done via the **ssh-agent** as mentioned in the [go-git](https://github.com/go-git/go-git) documentation.
+
+This is a one-time-only configuration since the file will be persisted on the preffered backing storage.
