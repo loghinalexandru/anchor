@@ -13,7 +13,29 @@ import (
 )
 
 const (
-	addName       = "add"
+	addName      = "add"
+	addUsage     = "anchor add [FLAGS]"
+	addShortHelp = "append a bookmark entry with set labels"
+	addLongHelp  = `  Append a bookmark to a file on the backing storage determined by the 
+  flatten hierarchy of the provided labels. Order of the flags matter when storing the entry.
+
+  If no label is provided via the -l flag, all the entries will be added
+  to the default "root" label.
+
+  By default it tries to fetch the "title" content from the provided URL. If it fails
+  to do so, it will store the entry with same title as the URL. You can provide a specific
+  title with the flag -t and it overwrites the behaviour mentioned above.
+
+EXAMPLES:
+  # Append to default label
+  anchor add "https://www.youtube.com/"
+
+  # Append to a label "programming" with a sublabel "go"
+  anchor add -l programming -l go "https://gobyexample.com/"
+`
+)
+
+const (
 	clientTimeout = 5 * time.Second
 )
 
@@ -33,8 +55,9 @@ func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 	return &ff.Command{
 		Name:      addName,
-		Usage:     "anchor add [FLAGS]",
-		ShortHelp: "add a bookmark with set labels",
+		Usage:     addUsage,
+		ShortHelp: addShortHelp,
+		LongHelp:  addLongHelp,
 		Flags:     flags,
 		Exec:      add.handle,
 	}

@@ -11,7 +11,19 @@ import (
 )
 
 const (
-	syncName            = "sync"
+	syncName      = "sync"
+	syncUsage     = "anchor sync [FLAGS]"
+	syncShortHelp = "synchronize changes with configured backing storage"
+	syncLongHelp  = `  In order to persist changes in case of a remote backing storage
+  this command needs to be invoked. Otherwise this will persist only on the local file system.
+  This should be performed only for the write part since for reading anchor always gets the
+  latest changes from the configured storage.
+
+  Has no effect if the backing storage is set to "local".
+`
+)
+
+const (
 	msgNothingToSync    = "Nothing to sync, there are no local changes."
 	msgSyncConfirmation = "Sync changes with remote?"
 )
@@ -30,8 +42,9 @@ func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 	return &ff.Command{
 		Name:      syncName,
-		Usage:     "anchor sync [FLAGS]",
-		ShortHelp: "sync changes with configured remote",
+		Usage:     syncUsage,
+		ShortHelp: syncShortHelp,
+		LongHelp:  syncLongHelp,
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
 			return sync.handle(ctx.(rootContext), args)

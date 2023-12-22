@@ -27,7 +27,7 @@
 </div>
 
 ---
-**Anchor** is a simple CLI tool for managing bookmarks for all platforms. It supports a custom and intuitive TUI via [bubbletea](https://github.com/charmbracelet/bubbletea) and automatic syncing with git via [go-git](https://github.com/go-git/go-git) as a backing storage.
+**Anchor** is a simple CLI tool for storing bookmarks neatly organized in a flattened label hierarchy. It features a custom and intuitive TUI via [bubbletea](https://github.com/charmbracelet/bubbletea) and automatic syncing with git via [go-git](https://github.com/go-git/go-git) as a backing storage.
 
 # Installation
 
