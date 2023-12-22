@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 'stable'
+
+      - name: Build
+        run: go build -race -v ./...
+
+      - name: Test
+        run: go test -race -v ./...

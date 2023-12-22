@@ -1,0 +1,31 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+          go-version: 'stable'
+    - name: Build for darwin/arm64
+      run: GOOS=darwin GOARCH=arm64 go build -o "bin/anchor_darwin-arm64"-ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME"
+    - name: Upload binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: anchor_darwin-arm64
+        path: bin/anchor_darwin-arm64
+  
+    # - uses: ncipollo/release-action@v1
+    #   with:
+    #     artifacts: "release.tar.gz,foo/*.txt"
+    #     bodyFile: "body.md"
