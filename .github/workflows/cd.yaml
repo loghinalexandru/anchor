@@ -11,7 +11,13 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Fetch tags
+      run: git fetch --tags --force
+    - name: Fetch release body from tag
+      uses: ericcornelissen/git-tag-annotation-action@v2
+      id: tag-data
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
@@ -27,3 +33,4 @@ jobs:
     - uses: ncipollo/release-action@v1
       with:
         artifacts: "anchor*"
+        body: ${{ steps.tag-data.outputs.git-tag-annotation }}
