@@ -18,7 +18,7 @@ jobs:
       with:
           go-version: 'stable'
     - name: Build for darwin/arm64
-      run: GOOS=darwin GOARCH=arm64 go build -o "bin/anchor_darwin-arm64"-ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME"
+      run: GOOS=darwin GOARCH=arm64 go build -o "bin/anchor_darwin-arm64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" ./...
     - name: Upload binaries
       uses: actions/upload-artifact@v4
       with:
