@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -68,7 +69,7 @@ func (add *addCmd) handle(_ context.Context, args []string) error {
 		return ErrMissingURL
 	}
 
-	file, err := label.Open(add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
+	file, err := label.Open(config.RootDir(), add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
 	if err != nil {
 		return err
 	}

@@ -13,24 +13,26 @@ import (
 )
 
 var (
-	ErrInvalidLabel = errors.New("invalid or missing label passed")
+	ErrInvalidLabel = errors.New("invalid label passed")
+	ErrMissingLabel = errors.New("missing file for label(s) passed")
 )
 
 var notLabelRegexp = regexp.MustCompile(`([^a-z0-9-]|^$)`)
 
 // Open validates and opens the file constructed from the labels.
-// If the file does not exist or some labels are invalid, returns ErrInvalidLabel.
+// If the file does not exist or some labels are invalid, returns ErrMissingLabel
+// and ErrInvalidLabel respectively.
 // If os.O_CREATE flag is passed and the file does not exist,
 // it is created with mode perm config.StdFileMode.
-func Open(labels []string, flag int) (*os.File, error) {
+func Open(rootDir string, labels []string, flag int) (*os.File, error) {
 	err := validate(labels)
 	if err != nil {
 		return nil, err
 	}
 
-	fh, err := os.OpenFile(name(labels), flag, config.StdFileMode)
+	fh, err := os.OpenFile(name(rootDir, labels), flag, config.StdFileMode)
 	if err != nil && errors.Is(err, fs.ErrNotExist) {
-		return nil, ErrInvalidLabel
+		return nil, ErrMissingLabel
 	}
 
 	return fh, err
@@ -38,13 +40,13 @@ func Open(labels []string, flag int) (*os.File, error) {
 
 // Remove validates and removes the file constructed from the labels.
 // If the file does not exist, has no effect.
-func Remove(labels []string) error {
+func Remove(rootDir string, labels []string) error {
 	err := validate(labels)
 	if err != nil {
 		return err
 	}
 
-	err = os.Remove(name(labels))
+	err = os.Remove(name(rootDir, labels))
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
@@ -63,13 +65,13 @@ func Format(labels []string) []string {
 	return result
 }
 
-func name(labels []string) string {
+func name(rootDir string, labels []string) string {
 	if len(labels) == 0 {
-		return filepath.Join(config.RootDir(), config.StdLabel)
+		return filepath.Join(rootDir, config.StdLabel)
 	}
 
 	filename := strings.Join(labels, config.StdLabelSeparator)
-	return filepath.Join(config.RootDir(), filename)
+	return filepath.Join(rootDir, filename)
 }
 
 func validate(labels []string) error {

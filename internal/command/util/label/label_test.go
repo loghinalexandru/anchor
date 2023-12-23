@@ -17,23 +17,23 @@ func TestName(t *testing.T) {
 	}{
 		"empty-label": {
 			labels: []string{},
-			want:   "root",
+			want:   filepath.Join("test", "root"),
 		},
 		"single-label": {
 			labels: []string{"dotnet"},
-			want:   "dotnet",
+			want:   filepath.Join("test", "dotnet"),
 		},
 		"multi-label": {
 			labels: []string{"prometheus", "golang"},
-			want:   "prometheus.golang",
+			want:   filepath.Join("test", "prometheus.golang"),
 		},
 	}
 
 	for k, c := range tsc {
 		t.Run(k, func(t *testing.T) {
-			got := name(c.labels)
-			if c.want != filepath.Base(got) {
-				t.Errorf("unexpected filename from label(s); want %q, got %q", c.want, filepath.Base(got))
+			got := name("test", c.labels)
+			if c.want != got {
+				t.Errorf("unexpected filename from label(s); want %q, got %q", c.want, got)
 			}
 		})
 	}

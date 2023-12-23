@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
+	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
@@ -38,7 +39,7 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 }
 
 func (v *viewCmd) handle(ctx context.Context, _ []string) error {
-	fh, err := label.Open(v.labels, os.O_RDWR)
+	fh, err := label.Open(config.RootDir(), v.labels, os.O_RDWR)
 	if err != nil {
 		return err
 	}
