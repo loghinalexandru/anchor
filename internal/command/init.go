@@ -17,7 +17,7 @@ const (
   for any other input. If you want to use something else provide
   what the backing storage requires as arguments.
 
-EXAMPLES:
+EXAMPLES
    # Setup local storage
    anchor init
 

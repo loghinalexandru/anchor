@@ -13,7 +13,15 @@ import (
 )
 
 const (
-	importName = "import"
+	importName      = "import"
+	importUsage     = "anchor import [PATH]"
+	importShortHelp = "import bookmarks from a browser exported file"
+	importLongHelp  = `  Imports all the bookmarks from a "NETSCAPE-Bookmark-file-1" file format setting up the appropriate labels
+  based on the folder structure that was previously in the browser.
+
+  On import, it formats all the invalid folder names because they will be reused as labels inside anchor.
+  Valid label names contain only lower case alphanumeric characters and hyphen.
+`
 )
 
 var (
@@ -25,8 +33,9 @@ type importCmd struct{}
 func (imp *importCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
 		Name:      importName,
-		Usage:     "anchor import [PATH]",
-		ShortHelp: "import bookmarks from a file",
+		Usage:     importUsage,
+		ShortHelp: importShortHelp,
+		LongHelp:  importLongHelp,
 		Flags:     ff.NewFlagSet("import").SetParent(parent),
 		Exec:      imp.handle,
 	}

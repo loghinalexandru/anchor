@@ -11,7 +11,11 @@ import (
 )
 
 const (
-	treeName = "tree"
+	treeName      = "tree"
+	treeUsage     = "anchor tree"
+	treeShortHelp = "list available labels in a tree structure"
+	treeLongHelp  = `  Print to stdout a tree like structure to see exactly the current label hierarchy.
+  The values on the left of each label represents the number of distinct bookmarks it holds.`
 )
 
 type treeCmd struct{}
@@ -19,8 +23,9 @@ type treeCmd struct{}
 func (tree *treeCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	return &ff.Command{
 		Name:      treeName,
-		Usage:     "anchor tree",
-		ShortHelp: "list available labels in a tree structure",
+		Usage:     treeUsage,
+		ShortHelp: treeShortHelp,
+		LongHelp:  treeLongHelp,
 		Flags:     ff.NewFlagSet("tree").SetParent(parent),
 		Exec:      tree.handle,
 	}

@@ -27,7 +27,7 @@ const (
   to do so, it will store the entry with same title as the URL. You can provide a specific
   title with the flag -t and it overwrites the behaviour mentioned above.
 
-EXAMPLES:
+EXAMPLES
   # Append to default label
   anchor add "https://www.youtube.com/"
 

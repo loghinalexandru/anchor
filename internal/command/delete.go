@@ -10,7 +10,14 @@ import (
 )
 
 const (
-	deleteName     = "delete"
+	deleteName      = "delete"
+	deleteUsage     = "anchor delete [FLAGS]"
+	deleteShortHelp = "remove all bookmarks under specified labels"
+	deleteLongHelp  = `  Performs a bulk delete on all the bookmarks under the specified labels.
+  Prompts for confirmation before deleting.`
+)
+
+const (
 	msgDeleteLabel = "You are about to delete the label and associated bookmarks. Proceed?"
 )
 
@@ -24,8 +31,9 @@ func (del *deleteCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 	return &ff.Command{
 		Name:      deleteName,
-		Usage:     "anchor delete [FLAGS]",
-		ShortHelp: "remove a bookmark",
+		Usage:     deleteUsage,
+		ShortHelp: deleteShortHelp,
+		LongHelp:  deleteLongHelp,
 		Flags:     flags,
 		Exec:      del.handle,
 	}

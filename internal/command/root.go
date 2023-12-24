@@ -15,6 +15,7 @@ import (
 
 const (
 	rootName        = "anchor"
+	rootUsage       = "anchor <SUBCOMMAND>"
 	msgUpdateFailed = "Failed pulling latest changes. Continue operation?"
 )
 
@@ -40,7 +41,7 @@ func newRoot() *rootCmd {
 
 	root.cmd = &ff.Command{
 		Name:  rootName,
-		Usage: "anchor <SUBCOMMAND>",
+		Usage: rootUsage,
 		Flags: rootFlags,
 	}
 

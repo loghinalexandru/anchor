@@ -17,7 +17,22 @@ import (
 )
 
 const (
-	viewName        = "view"
+	viewName      = "view"
+	viewUsage     = "anchor view [FLAGS]"
+	viewShortHelp = "view and edit existing bookmarks"
+	viewLongHelp  = `  This command will open up the interactive TUI that can view/edit each individual bookmark.
+  Prompts for confirmation for any change on exit.
+
+EXAMPLES
+  # View bookmarks under label "programming"
+  anchor view -l programming
+
+  # View bookmarks with sublabel go under label "programming"
+  anchor view -l programming -l go
+`
+)
+
+const (
 	msgApplyChanges = "You are about to apply changes from previous operation. Proceed?"
 )
 
@@ -31,8 +46,9 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 
 	return &ff.Command{
 		Name:      viewName,
-		Usage:     "anchor view [FLAGS]",
-		ShortHelp: "view existing bookmarks",
+		Usage:     viewUsage,
+		ShortHelp: viewShortHelp,
+		LongHelp:  viewLongHelp,
 		Flags:     flags,
 		Exec:      v.handle,
 	}
