@@ -30,6 +30,8 @@ jobs:
       run: env GOOS=linux GOARCH=amd64 go build -o "anchor_linux-amd64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
     - name: Build for windows/amd64
       run: env GOOS=windows GOARCH=amd64 go build -o "anchor_windows-amd64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+    - name: Build checksums
+      run: shasum -a 256 anchor* > "anchor_checksums.txt"
     - uses: ncipollo/release-action@v1
       with:
         artifacts: "anchor*"
