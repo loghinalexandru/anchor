@@ -2,7 +2,6 @@ package parser
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"regexp"
 
@@ -13,11 +12,35 @@ import (
 
 var toolbarRegexp = regexp.MustCompile("(?i)bookmark|bar")
 
-func Traversal(rootDir string, labels []string, node netscape.Folder) error {
-	bar := toolbarRegexp.MatchString(node.Name)
+// TraverseNode creates files with appropriate labels based on the folder structure from the node.
+// If there are invalid label names, they will be formatted according to label.Format function.
+// Duplicate bookmarks are ignored by default and only the first occurrence is added in the file with
+// the same label structure.
+func TraverseNode(rootDir string, labels []string, node netscape.Folder) error {
+	toolbar := toolbarRegexp.MatchString(node.Name)
 
-	if len(node.Bookmarks) > 0 && !bar {
+	if len(node.Bookmarks) > 0 && !toolbar {
 		labels = append(labels, node.Name)
+	}
+
+	err := createFile(rootDir, node.Bookmarks, labels)
+	if err != nil {
+		return err
+	}
+
+	for _, n := range node.Subfolders {
+		err = TraverseNode(rootDir, labels, n)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func createFile(rootDir string, bookmarks []netscape.Bookmark, labels []string) error {
+	if len(bookmarks) == 0 {
+		return nil
 	}
 
 	file, err := label.Open(rootDir, label.Format(labels), os.O_APPEND|os.O_CREATE|os.O_RDWR)
@@ -25,7 +48,7 @@ func Traversal(rootDir string, labels []string, node netscape.Folder) error {
 		return err
 	}
 
-	for _, b := range node.Bookmarks {
+	for _, b := range bookmarks {
 		entry, err := model.NewBookmark(b.URL, model.WithTitle(b.Title))
 		if err != nil {
 			file.Close()
@@ -37,23 +60,7 @@ func Traversal(rootDir string, labels []string, node netscape.Folder) error {
 			file.Close()
 			return err
 		}
-
-		if errors.Is(err, model.ErrDuplicateBookmark) {
-			fmt.Println(err)
-		}
 	}
 
-	err = file.Close()
-	if err != nil {
-		return err
-	}
-
-	for _, n := range node.Subfolders {
-		err = Traversal(rootDir, labels, n)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return file.Close()
 }

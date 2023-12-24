@@ -48,7 +48,7 @@ func (*importCmd) handle(_ context.Context, args []string) error {
 	}
 
 	doc, _ := netscape.Unmarshal(content)
-	err = parser.Traversal(config.RootDir(), nil, doc.Root)
+	err = parser.TraverseNode(config.RootDir(), nil, doc.Root)
 
 	if err != nil {
 		return err
