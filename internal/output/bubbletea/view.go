@@ -79,11 +79,19 @@ func (v *View) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.bookmarks, inputCmd = v.bookmarks.Update(msg)
 		v.input, viewCmd = v.input.Update(msg)
 	case tea.KeyMsg:
+		// Bypass "msg" input pipeline if in filtering mode. Do not use
+		// v.bookmarks.FilterInput.Focused() because it is not updated correctly.
+		if !v.bookmarks.KeyMap.Filter.Enabled() {
+			v.bookmarks, viewCmd = v.bookmarks.Update(msg)
+			break
+		}
+
 		if v.input.Focused() {
 			v.input, inputCmd = v.handleInput(msg)
-		} else {
-			v.bookmarks, viewCmd = v.handleList(msg)
+			break
 		}
+
+		v.bookmarks, viewCmd = v.handleList(msg)
 	default:
 		v.input, inputCmd = v.input.Update(msg)
 		v.bookmarks, viewCmd = v.bookmarks.Update(msg)
@@ -110,17 +118,19 @@ func (v *View) handleInput(msg tea.KeyMsg) (textinput.Model, tea.Cmd) {
 }
 
 func (v *View) handleList(msg tea.KeyMsg) (list.Model, tea.Cmd) {
+	item, ok := v.bookmarks.SelectedItem().(*model.Bookmark)
+	if !ok {
+		return v.bookmarks.Update(msg)
+	}
+
 	switch msg.String() {
-	case "enter", "space":
-		item := v.bookmarks.SelectedItem().(*model.Bookmark)
+	case "enter", " ":
 		_ = open(item.Description())
 	case "d", "delete":
-		item := v.bookmarks.SelectedItem().(*model.Bookmark)
 		v.bookmarks.RemoveItem(v.bookmarks.Index())
 		v.dirty = true
 		return v.bookmarks, v.bookmarks.NewStatusMessage(fmt.Sprintf(msgStatus, item.Title()))
 	case "r":
-		item := v.bookmarks.SelectedItem().(*model.Bookmark)
 		v.input.SetValue(item.Title())
 		v.input.Focus()
 		return v.bookmarks, textinput.Blink
