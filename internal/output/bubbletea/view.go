@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"slices"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -79,9 +80,8 @@ func (v *View) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.bookmarks, inputCmd = v.bookmarks.Update(msg)
 		v.input, viewCmd = v.input.Update(msg)
 	case tea.KeyMsg:
-		// Bypass "msg" input pipeline if in filtering mode. Do not use
-		// v.bookmarks.FilterInput.Focused() because it is not updated correctly.
-		if !v.bookmarks.KeyMap.Filter.Enabled() {
+		// Bypass "msg" input pipeline if setting filter value.
+		if v.bookmarks.SettingFilter() {
 			v.bookmarks, viewCmd = v.bookmarks.Update(msg)
 			break
 		}
@@ -127,7 +127,7 @@ func (v *View) handleList(msg tea.KeyMsg) (list.Model, tea.Cmd) {
 	case "enter", " ":
 		_ = open(item.Description())
 	case "d", "delete":
-		v.bookmarks.RemoveItem(v.bookmarks.Index())
+		v.bookmarks.RemoveItem(slices.Index(v.bookmarks.Items(), v.bookmarks.SelectedItem()))
 		v.dirty = true
 		return v.bookmarks, v.bookmarks.NewStatusMessage(fmt.Sprintf(msgStatus, item.Title()))
 	case "r":
