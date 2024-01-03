@@ -29,6 +29,8 @@
 ---
 **Anchor** is a simple CLI tool for storing bookmarks neatly organized in a flattened label hierarchy. It features a custom and intuitive TUI via [bubbletea](https://github.com/charmbracelet/bubbletea) and automatic syncing with git via [go-git](https://github.com/go-git/go-git) as a backing storage.
 
+<img src="https://raw.githubusercontent.com/loghinalexandru/loghinalexandru.github.io/master/static/img/anchor_demo.gif">
+
 # Installation
 
 Download one of the [pre-built binaries](https://github.com/loghinalexandru/anchor/releases/latest) and make it available for the shell you are using. Make sure to grab the right one for the operating system/architecture you intend to use it on.
