@@ -3,7 +3,7 @@ name: CD
 on:
   push:
     tags:
-      - "*"
+      - "v*"
 
 jobs:
   build:
@@ -22,14 +22,31 @@ jobs:
       uses: actions/setup-go@v4
       with:
           go-version: 'stable'
+    - name: Set up zip
+      uses: actions/setup-go@v4
+      with:
+        go-version: 'stable'
+
     - name: Build for darwin/arm64
-      run: env GOOS=darwin GOARCH=arm64 go build -o "anchor_darwin-arm64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+      run: env GOOS=darwin GOARCH=arm64 go build -o darwin-arm64/anchor -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+    - name: Zip for darwin/arm64
+      run: tar -cvzf "anchor$GITHUB_REF_NAME_darwin-arm64.tar.gz" README.md LICENSE -C darwin-arm64 anchor
+
     - name: Build for darwin/amd64
-      run: env GOOS=darwin GOARCH=amd64 go build -o "anchor_darwin-amd64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+      run: env GOOS=darwin GOARCH=amd64 go build -o darwin-amd64/anchor -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+    - name: Zip for darwin/amd64
+      run: tar -cvzf "anchor$GITHUB_REF_NAME_darwin-amd64.tar.gz" README.md LICENSE -C darwin-amd64 anchor
+
     - name: Build for linux/amd64
-      run: env GOOS=linux GOARCH=amd64 go build -o "anchor_linux-amd64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+      run: env GOOS=linux GOARCH=amd64 go build -o linux-amd64/anchor -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+    - name: Zip for linux/amd64
+      run: tar -cvzf "anchor$GITHUB_REF_NAME_linux-amd64.tar.gz" README.md LICENSE -C linux-amd64 anchor
+
     - name: Build for windows/amd64
-      run: env GOOS=windows GOARCH=amd64 go build -o "anchor_windows-amd64" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+      run: env GOOS=windows GOARCH=amd64 go build -o "windows-amd64/anchor.exe" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=$GITHUB_REF_NAME" .
+    - name: Zip for linux/amd64
+      run: zip -j "anchor$GITHUB_REF_NAME_windows-amd64.zip" "windows-amd64/anchor.exe" README.md LICENSE
+
     - name: Build checksums
       run: shasum -a 256 anchor* > "anchor_checksums.txt"
     - uses: ncipollo/release-action@v1
