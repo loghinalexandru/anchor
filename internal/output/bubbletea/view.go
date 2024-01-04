@@ -127,9 +127,17 @@ func (v *View) handleList(msg tea.KeyMsg) (list.Model, tea.Cmd) {
 	case "enter", " ":
 		_ = open(item.Description())
 	case "d", "delete":
-		v.bookmarks.RemoveItem(slices.Index(v.bookmarks.Items(), v.bookmarks.SelectedItem()))
-		v.dirty = true
-		return v.bookmarks, v.bookmarks.NewStatusMessage(fmt.Sprintf(msgStatus, item.Title()))
+		var cmd tea.Cmd
+		items := slices.DeleteFunc(v.bookmarks.Items(), func(item list.Item) bool {
+			return item == v.bookmarks.SelectedItem()
+		})
+
+		if len(items) != len(v.bookmarks.Items()) {
+			v.dirty = true
+			cmd = tea.Batch(v.bookmarks.SetItems(items), v.bookmarks.NewStatusMessage(fmt.Sprintf(msgStatus, item.Title())))
+		}
+
+		return v.bookmarks, cmd
 	case "r":
 		v.input.SetValue(item.Title())
 		v.input.Focus()
