@@ -40,7 +40,7 @@ jobs:
 
     - name: Build for windows/amd64
       run: env GOOS=windows GOARCH=amd64 go build -o "windows-amd64/anchor.exe" -ldflags "-X github.com/loghinalexandru/anchor/internal/command.version=${{ github.ref_name }}" .
-    - name: Zip for linux/amd64
+    - name: Zip for windows/amd64
       run: zip -j "anchor${{ github.ref_name }}_windows-amd64.zip" "windows-amd64/anchor.exe" README.md LICENSE
 
     - name: Build checksums
