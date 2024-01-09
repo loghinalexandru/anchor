@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"net/url"
@@ -116,7 +117,7 @@ func (b *Bookmark) fetchTitle() string {
 		return result
 	}
 
-	return string(match[1])
+	return html.UnescapeString(string(match[1]))
 }
 
 func (b *Bookmark) String() string {
