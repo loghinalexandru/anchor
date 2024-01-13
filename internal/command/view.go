@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -55,7 +56,7 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 }
 
 func (v *viewCmd) handle(ctx context.Context, _ []string) error {
-	fh, err := label.Open(config.RootDir(), v.labels, os.O_RDWR)
+	fh, err := label.OpenFuzzy(config.RootDir(), v.labels, os.O_RDWR)
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func (v *viewCmd) handle(ctx context.Context, _ []string) error {
 		bookmarks = append(bookmarks, bk)
 	}
 
-	runner := tea.NewProgram(bubbletea.NewView(bookmarks), tea.WithContext(ctx))
+	runner := tea.NewProgram(bubbletea.NewView(bookmarks, filepath.Base(fh.Name())), tea.WithContext(ctx))
 	state, err := runner.Run()
 	if err != nil {
 		return err

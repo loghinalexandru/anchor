@@ -2,7 +2,6 @@ package label
 
 import (
 	"errors"
-	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -17,21 +16,21 @@ func TestName(t *testing.T) {
 	}{
 		"empty-label": {
 			labels: []string{},
-			want:   filepath.Join("test", "root"),
+			want:   "root",
 		},
 		"single-label": {
 			labels: []string{"dotnet"},
-			want:   filepath.Join("test", "dotnet"),
+			want:   "dotnet",
 		},
 		"multi-label": {
 			labels: []string{"prometheus", "golang"},
-			want:   filepath.Join("test", "prometheus.golang"),
+			want:   "prometheus.golang",
 		},
 	}
 
 	for k, c := range tsc {
 		t.Run(k, func(t *testing.T) {
-			got := name("test", c.labels)
+			got := filename(c.labels)
 			if c.want != got {
 				t.Errorf("unexpected filename from label(s); want %q, got %q", c.want, got)
 			}
