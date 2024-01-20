@@ -3,17 +3,15 @@ package storage
 import (
 	"errors"
 	"os"
-
-	"github.com/loghinalexandru/anchor/internal/config"
 )
 
 type localStorage struct {
 	path string
 }
 
-func newLocalStorage() *localStorage {
+func newLocalStorage(path string) *localStorage {
 	return &localStorage{
-		path: config.RootDir(),
+		path: path,
 	}
 }
 

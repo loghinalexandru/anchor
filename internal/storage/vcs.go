@@ -2,11 +2,11 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	"github.com/loghinalexandru/anchor/internal/config"
 )
 
 const (
@@ -22,16 +22,14 @@ type gitStorage struct {
 	auth transport.AuthMethod
 }
 
-func newGitStorage() (*gitStorage, error) {
-	dir := config.RootDir()
-
+func newGitStorage(path string) (*gitStorage, error) {
 	auth, err := ssh.NewSSHAgentAuth(stdUser)
 	if err != nil {
 		return nil, err
 	}
 
 	return &gitStorage{
-		path: dir,
+		path: path,
 		auth: auth,
 	}, nil
 }
@@ -40,6 +38,8 @@ func (storage *gitStorage) Init(args ...string) error {
 	if len(args) == 0 {
 		return ErrInvalidURL
 	}
+
+	fmt.Println(storage.path)
 
 	_, err := git.PlainClone(storage.path, false, &git.CloneOptions{
 		URL:  args[0],

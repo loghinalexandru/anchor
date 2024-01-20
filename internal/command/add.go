@@ -3,12 +3,9 @@ package command
 import (
 	"context"
 	"errors"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
-	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -36,10 +33,6 @@ EXAMPLES
 `
 )
 
-const (
-	clientTimeout = 5 * time.Second
-)
-
 var (
 	ErrMissingURL = errors.New("missing bookmark URL from arguments")
 )
@@ -60,16 +53,18 @@ func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		ShortHelp: addShortHelp,
 		LongHelp:  addLongHelp,
 		Flags:     flags,
-		Exec:      add.handle,
+		Exec: func(ctx context.Context, args []string) error {
+			return add.handle(ctx.(appContext), args)
+		},
 	}
 }
 
-func (add *addCmd) handle(_ context.Context, args []string) error {
+func (add *addCmd) handle(ctx appContext, args []string) error {
 	if len(args) == 0 {
 		return ErrMissingURL
 	}
 
-	file, err := label.Open(config.RootDir(), add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
+	file, err := label.Open(ctx.path, add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
 	if err != nil {
 		return err
 	}
@@ -77,7 +72,7 @@ func (add *addCmd) handle(_ context.Context, args []string) error {
 	b, err := model.NewBookmark(
 		args[0],
 		model.WithTitle(add.title),
-		model.WithClient(&http.Client{Timeout: clientTimeout}))
+		model.WithClient(ctx.client))
 	if err != nil {
 		return err
 	}

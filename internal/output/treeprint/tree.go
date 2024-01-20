@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"path/filepath"
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/config"
@@ -18,7 +17,7 @@ const (
 
 func Generate(fsys fs.FS) string {
 	known := map[string]treeprint.Tree{}
-	tree := treeprint.NewWithRoot(filepath.Base(config.RootDir()))
+	tree := treeprint.NewWithRoot(config.StdDirName)
 
 	// For each dir in fsys read and compute number of lines together
 	// with the tree from the flat structure of the file names.

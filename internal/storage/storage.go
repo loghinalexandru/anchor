@@ -1,6 +1,12 @@
 package storage
 
-import "strings"
+import (
+	"os"
+	"path"
+	"strings"
+
+	"github.com/loghinalexandru/anchor/internal/config"
+)
 
 type Kind int
 
@@ -14,17 +20,17 @@ type Storer interface {
 	Store(msg string) error
 }
 
-func New(k Kind) Storer {
+func New(k Kind, path string) Storer {
 	switch k {
 	case Git:
-		storer, err := newGitStorage()
+		storer, err := newGitStorage(path)
 		if err != nil {
 			panic(err)
 		}
 
 		return storer
 	default:
-		return newLocalStorage()
+		return newLocalStorage(path)
 	}
 }
 
@@ -35,4 +41,13 @@ func Parse(s string) Kind {
 	default:
 		return Local
 	}
+}
+
+func Path() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic("Cannot open storage directory")
+	}
+
+	return path.Join(home, config.StdDirName)
 }

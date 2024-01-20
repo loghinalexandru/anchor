@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
@@ -23,11 +25,14 @@ type Updater interface {
 	Update() error
 }
 
-// rootContext is a context.Context wrapper for
+// appContext is a context.Context wrapper for
 // type safety and to avoid key-value pairs.
-type rootContext struct {
+type appContext struct {
 	context.Context
+	kind   storage.Kind
 	storer storage.Storer
+	path   string
+	client *http.Client
 }
 
 type rootCmd struct {
@@ -65,21 +70,35 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 		return err
 	}
 
-	fh, err := os.Open(config.FilePath())
+	fh, err := os.Open(config.Filepath())
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
 	defer fh.Close()
 
+	appCtx := appContext{
+		Context: ctx,
+		kind:    storage.Local,
+		path:    storage.Path(),
+		client:  &http.Client{Timeout: config.StdHttpTimeout},
+	}
+
 	// Config file might not exist, ignore errors if so.
-	storer := storage.New(storage.Local)
 	ffyaml.Parse(fh, func(key, value string) error {
+		if key == config.StdLocationKey {
+			appCtx.path = filepath.Join(filepath.Clean(value), config.StdDirName)
+		}
+
 		if key == config.StdStorageKey {
-			storer = storage.New(storage.Parse(value))
+			appCtx.kind = storage.Parse(value)
 		}
 
 		return nil
 	})
+
+	// Initialize storer after config was read to not miss
+	// any custom values e.g. path.
+	appCtx.storer = storage.New(appCtx.kind, appCtx.path)
 
 	// Add appropriate middleware for each subcommand
 	for _, c := range root.cmd.Subcommands {
@@ -91,16 +110,11 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 		case versionName:
 			c.Exec = contextMiddleware(c.Exec)
 		default:
-			c.Exec = contextMiddleware(updaterMiddleware(c.Exec, storer))
+			c.Exec = contextMiddleware(updaterMiddleware(c.Exec, appCtx.storer))
 		}
 	}
 
-	cmdCtx := rootContext{
-		Context: ctx,
-		storer:  storer,
-	}
-
-	return root.cmd.Run(cmdCtx)
+	return root.cmd.Run(appCtx)
 }
 
 type handlerFunc func(ctx context.Context, args []string) error
