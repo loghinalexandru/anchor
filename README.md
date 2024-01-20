@@ -58,18 +58,17 @@ Valid options:
 
 # Usage
 
-In order to use **anchor** you first need to create a home for all your bookmarks. Before any operation you need to initialize the storage. For this run:
+In order to use **anchor** you first need to create a home for all your bookmarks. Before any operation you need to initialize the storage by running the following command:
 
 ```text
 anchor init
 ```
 
-In order to switch to **git** or any other storage, create a file under ```~/.anchor/config/anchor.yaml``` with the following config:
+In order to change the default behaviour create a file under ```~/.config/anchor.yaml``` with the following config values:
 
 ```yaml
-storage: git
+storage: git # Use git as backing storage (default: local)
+path: /Users/anchor-user # Change storage path (default: ~/)
 ```
 
-For this to work you need to have a repository already created and a **ssh** key already setup. The authentication is done via the **ssh-agent** as mentioned in the [go-git](https://github.com/go-git/go-git) documentation.
-
-This is a one-time-only configuration since the file will be persisted on the preffered backing storage.
+For this to work you need to have a repository already created and a **ssh** key already setup. The authentication is done via **ssh-agent** as mentioned in the [go-git](https://github.com/go-git/go-git) documentation.
