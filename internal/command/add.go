@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
+	"github.com/loghinalexandru/anchor/internal/command/util/parser"
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -33,10 +34,6 @@ EXAMPLES
 `
 )
 
-var (
-	ErrMissingURL = errors.New("missing bookmark URL from arguments")
-)
-
 type addCmd struct {
 	labels []string
 	title  string
@@ -60,19 +57,15 @@ func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
 }
 
 func (add *addCmd) handle(ctx appContext, args []string) error {
-	if len(args) == 0 {
-		return ErrMissingURL
-	}
-
-	file, err := label.Open(ctx.path, add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
+	b, err := model.NewBookmark(
+		parser.First(args),
+		model.WithTitle(add.title),
+		model.WithClient(ctx.client))
 	if err != nil {
 		return err
 	}
 
-	b, err := model.NewBookmark(
-		args[0],
-		model.WithTitle(add.title),
-		model.WithClient(ctx.client))
+	file, err := label.Open(ctx.path, add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
 	if err != nil {
 		return err
 	}
