@@ -8,7 +8,7 @@ import (
 
 const (
 	StdDirName        = ".anchor"
-	StdConfigPath     = ".config/anchor.yaml"
+	StdConfigPath     = ".config/anchor/anchor.yaml"
 	StdStorageKey     = "storage"
 	StdHttpTimeout    = 5 * time.Second
 	StdLocationKey    = "path"

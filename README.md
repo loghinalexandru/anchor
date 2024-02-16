@@ -64,7 +64,7 @@ In order to use **anchor** you first need to create a home for all your bookmark
 anchor init
 ```
 
-In order to change the default behaviour create a file under ```~/.config/anchor.yaml``` with the following config values:
+In order to change the default behaviour create a file under ```~/.config/anchor/anchor.yaml``` with the following config values:
 
 ```yaml
 storage: git # Use git as backing storage (default: local)
