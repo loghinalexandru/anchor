@@ -3,12 +3,13 @@ package command
 import (
 	"bufio"
 	"context"
+	"errors"
 	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
-	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/loghinalexandru/anchor/internal/output/bubbletea"
@@ -27,7 +28,7 @@ EXAMPLES
   # View bookmarks under label "programming"
   anchor view -l programming
 
-  # View bookmarks with sublabel go under label "programming"
+  # View bookmarks with sub-label go under label "programming"
   anchor view -l programming -l go
 `
 )
@@ -50,17 +51,21 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		ShortHelp: viewShortHelp,
 		LongHelp:  viewLongHelp,
 		Flags:     flags,
-		Exec:      v.handle,
+		Exec: func(ctx context.Context, args []string) error {
+			return v.handle(ctx.(appContext), args)
+		},
 	}
 }
 
-func (v *viewCmd) handle(ctx context.Context, _ []string) error {
-	fh, err := label.Open(config.RootDir(), v.labels, os.O_RDWR)
+func (v *viewCmd) handle(ctx appContext, _ []string) (err error) {
+	fh, err := label.OpenFuzzy(ctx.path, v.labels, os.O_RDWR)
 	if err != nil {
 		return err
 	}
 
-	defer fh.Close()
+	defer func() {
+		err = errors.Join(err, fh.Close())
+	}()
 
 	var bookmarks []list.Item
 	scanner := bufio.NewScanner(fh)
@@ -73,7 +78,7 @@ func (v *viewCmd) handle(ctx context.Context, _ []string) error {
 		bookmarks = append(bookmarks, bk)
 	}
 
-	runner := tea.NewProgram(bubbletea.NewView(bookmarks), tea.WithContext(ctx))
+	runner := tea.NewProgram(bubbletea.NewView(bookmarks, filepath.Base(fh.Name())), tea.WithContext(ctx))
 	state, err := runner.Run()
 	if err != nil {
 		return err

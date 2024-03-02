@@ -3,12 +3,10 @@ package command
 import (
 	"context"
 	"errors"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
-	"github.com/loghinalexandru/anchor/internal/config"
+	"github.com/loghinalexandru/anchor/internal/command/util/parser"
 	"github.com/loghinalexandru/anchor/internal/model"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -31,17 +29,9 @@ EXAMPLES
   # Append to default label
   anchor add "https://www.youtube.com/"
 
-  # Append to a label "programming" with a sublabel "go"
+  # Append to a label "programming" with a sub-label "go"
   anchor add -l programming -l go "https://gobyexample.com/"
 `
-)
-
-const (
-	clientTimeout = 5 * time.Second
-)
-
-var (
-	ErrMissingURL = errors.New("missing bookmark URL from arguments")
 )
 
 type addCmd struct {
@@ -60,24 +50,22 @@ func (add *addCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		ShortHelp: addShortHelp,
 		LongHelp:  addLongHelp,
 		Flags:     flags,
-		Exec:      add.handle,
+		Exec: func(ctx context.Context, args []string) error {
+			return add.handle(ctx.(appContext), args)
+		},
 	}
 }
 
-func (add *addCmd) handle(_ context.Context, args []string) error {
-	if len(args) == 0 {
-		return ErrMissingURL
-	}
-
-	file, err := label.Open(config.RootDir(), add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
+func (add *addCmd) handle(ctx appContext, args []string) error {
+	b, err := model.NewBookmark(
+		parser.First(args),
+		model.WithTitle(add.title),
+		model.WithClient(ctx.client))
 	if err != nil {
 		return err
 	}
 
-	b, err := model.NewBookmark(
-		args[0],
-		model.WithTitle(add.title),
-		model.WithClient(&http.Client{Timeout: clientTimeout}))
+	file, err := label.Open(ctx.path, add.labels, os.O_APPEND|os.O_CREATE|os.O_RDWR)
 	if err != nil {
 		return err
 	}

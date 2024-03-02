@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/loghinalexandru/anchor/internal/config"
+	"github.com/sahilm/fuzzy"
 )
 
 var (
@@ -30,7 +31,24 @@ func Open(rootDir string, labels []string, flag int) (*os.File, error) {
 		return nil, err
 	}
 
-	fh, err := os.OpenFile(name(rootDir, labels), flag, config.StdFileMode)
+	fh, err := os.OpenFile(filepath.Join(rootDir, filename(labels)), flag, config.StdFileMode)
+	if err != nil && errors.Is(err, fs.ErrNotExist) {
+		return nil, ErrMissingLabel
+	}
+
+	return fh, err
+}
+
+// OpenFuzzy performs the same action as Open but picks the
+// file based on a ranked fuzzy match on given labels.
+func OpenFuzzy(rootDir string, labels []string, flag int) (*os.File, error) {
+	err := validate(labels)
+	if err != nil {
+		return nil, err
+	}
+
+	fname := match(rootDir, labels)
+	fh, err := os.OpenFile(filepath.Join(rootDir, fname), flag, config.StdFileMode)
 	if err != nil && errors.Is(err, fs.ErrNotExist) {
 		return nil, ErrMissingLabel
 	}
@@ -46,7 +64,7 @@ func Remove(rootDir string, labels []string) error {
 		return err
 	}
 
-	err = os.Remove(name(rootDir, labels))
+	err = os.Remove(filepath.Join(rootDir, filename(labels)))
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
@@ -65,13 +83,35 @@ func Format(labels []string) []string {
 	return result
 }
 
-func name(rootDir string, labels []string) string {
-	if len(labels) == 0 {
-		return filepath.Join(rootDir, config.StdLabel)
+func match(rootDir string, labels []string) string {
+	var matchData []string
+
+	dd, err := os.ReadDir(rootDir)
+	if err != nil {
+		return filename(labels)
 	}
 
-	filename := strings.Join(labels, config.StdLabelSeparator)
-	return filepath.Join(rootDir, filename)
+	for _, d := range dd {
+		if !d.IsDir() {
+			matchData = append(matchData, d.Name())
+		}
+	}
+
+	target := filename(labels)
+	matches := fuzzy.Find(target, matchData)
+	if len(matches) <= 0 {
+		return target
+	}
+
+	return matches[0].Str
+}
+
+func filename(labels []string) string {
+	if len(labels) == 0 {
+		return config.StdLabel
+	}
+
+	return strings.Join(labels, config.StdLabelSeparator)
 }
 
 func validate(labels []string) error {

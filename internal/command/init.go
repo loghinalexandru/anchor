@@ -36,11 +36,11 @@ func (init *initCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		LongHelp:  initLongHelp,
 		Flags:     ff.NewFlagSet("init").SetParent(parent),
 		Exec: func(ctx context.Context, args []string) error {
-			return init.handle(ctx.(rootContext), args)
+			return init.handle(ctx.(appContext), args)
 		},
 	}
 }
 
-func (init *initCmd) handle(ctx rootContext, args []string) error {
+func (init *initCmd) handle(ctx appContext, args []string) error {
 	return ctx.storer.Init(args...)
 }

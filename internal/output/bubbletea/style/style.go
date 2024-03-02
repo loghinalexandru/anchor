@@ -31,8 +31,8 @@ func ApplyToDelegate(del *list.DefaultDelegate) {
 	del.Styles.SelectedDesc = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.NoColor{})
 }
 
-func ApplyToList(list *list.Model) {
-	list.Title = "Bookmarks"
+func ApplyToList(title string, list *list.Model) {
+	list.Title = title
 	list.InfiniteScrolling = true
 	list.Paginator.Type = paginator.Arabic
 	list.Paginator.ArabicFormat = "%d/%d \u2693"

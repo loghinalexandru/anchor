@@ -47,12 +47,12 @@ func (sync *syncCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		LongHelp:  syncLongHelp,
 		Flags:     flags,
 		Exec: func(ctx context.Context, args []string) error {
-			return sync.handle(ctx.(rootContext), args)
+			return sync.handle(ctx.(appContext), args)
 		},
 	}
 }
 
-func (sync *syncCmd) handle(ctx rootContext, _ []string) error {
+func (sync *syncCmd) handle(ctx appContext, _ []string) error {
 	if d, ok := ctx.storer.(Differ); ok {
 		status, err := d.Diff()
 		if err != nil {

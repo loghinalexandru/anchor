@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"net/url"
@@ -103,7 +104,10 @@ func (b *Bookmark) fetchTitle() string {
 	if err != nil {
 		return result
 	}
-	defer res.Body.Close()
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	content, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -116,7 +120,7 @@ func (b *Bookmark) fetchTitle() string {
 		return result
 	}
 
-	return string(match[1])
+	return html.UnescapeString(string(match[1]))
 }
 
 func (b *Bookmark) String() string {

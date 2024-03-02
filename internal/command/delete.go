@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/loghinalexandru/anchor/internal/command/util/label"
-	"github.com/loghinalexandru/anchor/internal/config"
 	"github.com/loghinalexandru/anchor/internal/output"
 	"github.com/peterbourgon/ff/v4"
 )
@@ -35,15 +34,17 @@ func (del *deleteCmd) manifest(parent *ff.FlagSet) *ff.Command {
 		ShortHelp: deleteShortHelp,
 		LongHelp:  deleteLongHelp,
 		Flags:     flags,
-		Exec:      del.handle,
+		Exec: func(ctx context.Context, args []string) error {
+			return del.handle(ctx.(appContext), args)
+		},
 	}
 }
 
-func (del *deleteCmd) handle(_ context.Context, _ []string) (err error) {
+func (del *deleteCmd) handle(ctx appContext, _ []string) (err error) {
 	ok := output.Confirm(msgDeleteLabel)
 	if !ok {
 		return nil
 	}
 
-	return label.Remove(config.RootDir(), del.labels)
+	return label.Remove(ctx.path, del.labels)
 }

@@ -23,12 +23,12 @@ type View struct {
 	dirty     bool
 }
 
-func NewView(bookmarks []list.Item) *View {
+func NewView(bookmarks []list.Item, title string) *View {
 	del := list.NewDefaultDelegate()
 	style.ApplyToDelegate(&del)
 
 	viewList := list.New(bookmarks, del, 0, 0)
-	style.ApplyToList(&viewList)
+	style.ApplyToList(title, &viewList)
 
 	return &View{
 		input:     textinput.New(),
