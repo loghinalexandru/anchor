@@ -77,7 +77,9 @@ func (root *rootCmd) handle(ctx context.Context, args []string) (err error) {
 	}
 
 	defer func() {
-		err = errors.Join(err, fh.Close())
+		if fh != nil {
+			err = errors.Join(err, fh.Close())
+		}
 	}()
 
 	// Initialize appContext with sensible defaults.
