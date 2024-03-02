@@ -3,6 +3,7 @@ package command
 import (
 	"bufio"
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -27,7 +28,7 @@ EXAMPLES
   # View bookmarks under label "programming"
   anchor view -l programming
 
-  # View bookmarks with sublabel go under label "programming"
+  # View bookmarks with sub-label go under label "programming"
   anchor view -l programming -l go
 `
 )
@@ -56,13 +57,15 @@ func (v *viewCmd) manifest(parent *ff.FlagSet) *ff.Command {
 	}
 }
 
-func (v *viewCmd) handle(ctx appContext, _ []string) error {
+func (v *viewCmd) handle(ctx appContext, _ []string) (err error) {
 	fh, err := label.OpenFuzzy(ctx.path, v.labels, os.O_RDWR)
 	if err != nil {
 		return err
 	}
 
-	defer fh.Close()
+	defer func() {
+		err = errors.Join(err, fh.Close())
+	}()
 
 	var bookmarks []list.Item
 	scanner := bufio.NewScanner(fh)

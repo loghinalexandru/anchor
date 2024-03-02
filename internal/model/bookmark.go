@@ -104,7 +104,10 @@ func (b *Bookmark) fetchTitle() string {
 	if err != nil {
 		return result
 	}
-	defer res.Body.Close()
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	content, err := io.ReadAll(res.Body)
 	if err != nil {

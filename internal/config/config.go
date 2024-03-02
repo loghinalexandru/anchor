@@ -10,7 +10,8 @@ const (
 	StdDirName        = ".anchor"
 	StdConfigPath     = ".config/anchor/anchor.yaml"
 	StdStorageKey     = "storage"
-	StdHttpTimeout    = 5 * time.Second
+	StdSyncModeKey    = "sync"
+	StdHttpTimeout    = 3 * time.Second
 	StdLocationKey    = "path"
 	StdSyncMsg        = "Sync bookmarks"
 	StdFileMode       = os.FileMode(0o666)

@@ -51,14 +51,12 @@ func createFile(rootDir string, bookmarks []netscape.Bookmark, labels []string) 
 	for _, b := range bookmarks {
 		entry, err := model.NewBookmark(b.URL, model.WithTitle(b.Title))
 		if err != nil {
-			file.Close()
-			return err
+			return file.Close()
 		}
 
 		err = entry.Write(file)
 		if err != nil && !errors.Is(err, model.ErrDuplicateBookmark) {
-			file.Close()
-			return err
+			return file.Close()
 		}
 	}
 

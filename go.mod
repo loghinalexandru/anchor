@@ -9,7 +9,7 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-cmp v0.6.0
 	github.com/peterbourgon/ff/v4 v4.0.0-alpha.4
-	github.com/sahilm/fuzzy v0.1.1-0.20230530133925-c48e322e2a8f
+	github.com/sahilm/fuzzy v0.1.1
 	github.com/virtualtam/netscape-go/v2 v2.2.0
 	github.com/xlab/treeprint v1.2.0
 )
@@ -42,7 +42,7 @@ require (
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/crypto v0.20.0 // indirect
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect

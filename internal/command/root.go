@@ -29,10 +29,11 @@ type Updater interface {
 // type safety and to avoid key-value pairs.
 type appContext struct {
 	context.Context
-	kind   storage.Kind
-	storer storage.Storer
-	path   string
-	client *http.Client
+	kind     storage.Kind
+	storer   storage.Storer
+	syncMode string
+	path     string
+	client   *http.Client
 }
 
 type rootCmd struct {
@@ -64,8 +65,8 @@ func newRoot() *rootCmd {
 	return root
 }
 
-func (root *rootCmd) handle(ctx context.Context, args []string) error {
-	err := root.cmd.Parse(args)
+func (root *rootCmd) handle(ctx context.Context, args []string) (err error) {
+	err = root.cmd.Parse(args)
 	if err != nil {
 		return err
 	}
@@ -74,22 +75,28 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-	defer fh.Close()
 
+	defer func() {
+		err = errors.Join(err, fh.Close())
+	}()
+
+	// Initialize appContext with sensible defaults.
 	appCtx := appContext{
-		Context: ctx,
-		kind:    storage.Local,
-		path:    storage.Path(),
-		client:  &http.Client{Timeout: config.StdHttpTimeout},
+		Context:  ctx,
+		kind:     storage.Local,
+		syncMode: "always",
+		path:     storage.Path(),
+		client:   &http.Client{Timeout: config.StdHttpTimeout},
 	}
 
 	// Config file might not exist, ignore errors if so.
-	ffyaml.Parse(fh, func(key, value string) error {
-		if key == config.StdLocationKey {
+	_ = ffyaml.Parse(fh, func(key, value string) error {
+		switch key {
+		case config.StdLocationKey:
 			appCtx.path = filepath.Join(filepath.Clean(value), config.StdDirName)
-		}
-
-		if key == config.StdStorageKey {
+		case config.StdSyncModeKey:
+			appCtx.syncMode = value
+		case config.StdStorageKey:
 			appCtx.kind = storage.Parse(value)
 		}
 
@@ -110,7 +117,7 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 		case versionName:
 			c.Exec = contextMiddleware(c.Exec)
 		default:
-			c.Exec = contextMiddleware(updaterMiddleware(c.Exec, appCtx.storer))
+			c.Exec = contextMiddleware(updaterMiddleware(c.Exec, appCtx))
 		}
 	}
 
@@ -119,9 +126,9 @@ func (root *rootCmd) handle(ctx context.Context, args []string) error {
 
 type handlerFunc func(ctx context.Context, args []string) error
 
-func updaterMiddleware(next handlerFunc, storer storage.Storer) handlerFunc {
-	updater, ok := storer.(Updater)
-	if !ok {
+func updaterMiddleware(next handlerFunc, appCtx appContext) handlerFunc {
+	updater, ok := appCtx.storer.(Updater)
+	if !ok || appCtx.syncMode != "always" {
 		return next
 	}
 

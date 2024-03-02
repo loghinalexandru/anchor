@@ -69,6 +69,7 @@ In order to change the default behaviour create a file under ```~/.config/anchor
 ```yaml
 storage: git # Use git as backing storage (default: local)
 path: /Users/anchor-user # Change storage path (default: ~/)
+sync: none # Change sync mode from (default: always)
 ```
 
 For this to work you need to have a repository already created and a **ssh** key already setup. The authentication is done via **ssh-agent** as mentioned in the [go-git](https://github.com/go-git/go-git) documentation.

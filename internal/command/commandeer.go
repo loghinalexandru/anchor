@@ -19,8 +19,8 @@ func Execute(args []string) error {
 
 	err := root.handle(ctx, args)
 	if errors.Is(err, ff.ErrHelp) || errors.Is(err, ff.ErrNoExec) {
-		fmt.Fprint(os.Stdout, ffhelp.Command(root.cmd))
-		return nil
+		_, err = fmt.Fprint(os.Stdout, ffhelp.Command(root.cmd))
+		return err
 	}
 
 	return err

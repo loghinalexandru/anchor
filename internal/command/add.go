@@ -29,7 +29,7 @@ EXAMPLES
   # Append to default label
   anchor add "https://www.youtube.com/"
 
-  # Append to a label "programming" with a sublabel "go"
+  # Append to a label "programming" with a sub-label "go"
   anchor add -l programming -l go "https://gobyexample.com/"
 `
 )
