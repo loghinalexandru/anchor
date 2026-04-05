@@ -33,7 +33,7 @@ func (c Confirmer) Confirm(prompt string, in io.Reader, out io.Writer) bool {
 	retries := 0
 
 	for retries < c.MaxRetries {
-		_, err := fmt.Fprint(out, c.Renderer(fmt.Sprintf("%s [y/n]: ", prompt)))
+		_, err := fmt.Fprint(out, c.Renderer(fmt.Sprintf("%s [Y/n]: ", prompt)))
 		if err != nil {
 			return false
 		}
@@ -44,6 +44,8 @@ func (c Confirmer) Confirm(prompt string, in io.Reader, out io.Writer) bool {
 		}
 
 		switch strings.ToLower(strings.TrimSpace(response)) {
+		case "":
+		        return true
 		case "y", "yes":
 			return true
 		case "n", "no":
